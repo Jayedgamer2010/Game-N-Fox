@@ -154,3 +154,18 @@ Preferred communication style: Simple, everyday language.
 - Refactored game move handlers (`handleTicTacToeCellClick`, `executeColorWarMove`) to calculate state outside of `setGameState` for proper WebSocket broadcasting
 - Added `modeRef` and `optionsRef` refs to avoid stale closures in WebSocket event handlers
 - Improved multiplayer state management with dedicated action handlers for each game type
+
+## Recent Changes (December 7, 2024)
+
+### Tic-Tac-Toe Multiplayer Turn Validation Fix
+- **Fixed turn validation bug**: Implemented stable ref-based player index tracking (`myMultiplayerGameIndexRef`) to prevent players from selecting cells during opponent's turn
+- **Root cause**: Previous implementation relied on name matching which could fail when multiple players had similar names or during race conditions
+- **Solution**: Player's game index is now captured from room.players array when game enters 'playing' status, stored in a ref, and used for turn validation
+- **Key implementation**: Ref is populated whenever `room.status === 'playing'` regardless of local game phase to handle race conditions between host and joiners
+
+### QuadMatch Royale UI Improvements
+- **Complete UI rewrite**: Redesigned component to match reference HTML with improved layout and visual presentation
+- **Compass-style layout**: Player hands arranged in North/South/East/West positions with proper rotation
+- **Card set names display**: Added actual card set names (Fruit cards, Animal cards, etc.) instead of generic "Card Set" labels
+- **Player name presentation**: Enhanced player name display with proper positioning and styling
+- **Preserved game logic**: All AI opponent logic and win condition detection remains intact
