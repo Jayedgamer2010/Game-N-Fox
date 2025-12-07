@@ -186,7 +186,7 @@ const HomeScreen: React.FC<{ onSelectGame: (id: GameId) => void }> = ({ onSelect
             disabled={featuredGame.isComingSoon}
             className="w-full bg-cover bg-center flex flex-col items-stretch justify-end rounded-xl pt-[132px] relative overflow-hidden group transition-transform active:scale-[0.98]"
             style={{ 
-              backgroundImage: `linear-gradient(0deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 100%), url("${featuredGame.backgroundImage}")` 
+              backgroundImage: `linear-gradient(0deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 100%), url("${featuredGame.cardImage || featuredGame.backgroundImage}")` 
             }}
           >
             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -217,7 +217,7 @@ const HomeScreen: React.FC<{ onSelectGame: (id: GameId) => void }> = ({ onSelect
             >
               <div 
                 className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-lg relative overflow-hidden shadow-lg"
-                style={{ backgroundImage: `url("${game.backgroundImage}")` }}
+                style={{ backgroundImage: `url("${game.cardImage || game.backgroundImage}")` }}
               >
                 {game.isComingSoon && (
                   <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex items-center gap-1 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-full">

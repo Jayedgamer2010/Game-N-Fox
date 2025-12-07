@@ -40,6 +40,7 @@ export const GAMES: Record<GameId, GameDefinition> = {
     },
     hasInteractionPhase: true,
     backgroundImage: redSuitBackground,
+    cardImage: "https://lh3.googleusercontent.com/aida-public/AB6AXuChydtdEEmFRREs1MJ00Q1MlW0mP4iaQx82VhOM-T8VUvVXnGoL7Oipy-7BTJnDpcqzyv0Ay0uRNvHEx13-Gvr6OWxlKt_V7aH9-bcxUg39gM2MM_oIkM9B4wwueTwJH0pxSx_e1ouzPHjDfcjShwHXji_HKTcW8GrNNiTMMXrGNZGvwBtpItFfluTXRXYHd3LXCCbE5I6ydt6DXw3XKA7-cPZTe6GA--oXNm4xdzO-1_e0kR4mh19TlXsbc0JqsmYOQGcWVZceD_Q",
     themeColor: "#1e94f6"
   },
   [GameId.COLOR_WAR]: {

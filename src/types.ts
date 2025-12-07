@@ -40,6 +40,7 @@ export interface GameDefinition {
   points: Record<string, number>;
   hasInteractionPhase: boolean;
   backgroundImage: string;
+  cardImage?: string;
   themeColor: string;
   playerCount: number;
   isComingSoon?: boolean;
