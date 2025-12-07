@@ -1,0 +1,5 @@
+{
+  "name": "4-Player Role Game",
+  "description": "A 4-player strategy game with roles: Owner, Police, Robber, and Thief. Featuring random role assignment, police investigations, and a 16-round scoring system.",
+  "requestFramePermissions": []
+}

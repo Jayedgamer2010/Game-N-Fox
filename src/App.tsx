@@ -198,7 +198,12 @@ const HomeScreen: React.FC<{ onSelectGame: (id: GameId) => void }> = ({ onSelect
   );
 };
 
-const SetupScreen: React.FC<{ gameName: string; onStart: (names: string[], aiConfig: { enabled: boolean; count: number }) => void; onBack: () => void }> = ({ gameName, onStart, onBack }) => {
+const SetupScreen: React.FC<{ gameName: string; gameId: GameId; onStart: (names: string[], aiConfig: { enabled: boolean; count: number }) => void; onBack: () => void }> = ({ gameName, gameId, onStart, onBack }) => {
+  const game = GAMES[gameId];
+  const playerCount = game.playerCount;
+  const isSolo = playerCount === 1;
+  const isTwoPlayer = playerCount === 2;
+  
   const [names, setNames] = useState(['', '', '', '']);
   const [aiEnabled, setAiEnabled] = useState(false);
   const [aiCount, setAiCount] = useState(1);
@@ -209,7 +214,13 @@ const SetupScreen: React.FC<{ gameName: string; onStart: (names: string[], aiCon
     setNames(newNames);
   };
 
-  const canStart = names.filter(n => n.trim()).length >= 1;
+  const canStart = names.slice(0, playerCount).filter(n => n.trim()).length >= 1;
+  
+  const playerLabels = isSolo 
+    ? ['PLAYER'] 
+    : isTwoPlayer 
+      ? ['PLAYER 1', 'PLAYER 2']
+      : ['PLAYER 1', 'PLAYER 2', 'PLAYER 3', 'PLAYER 4'];
 
   return (
     <div className="flex flex-col min-h-screen bg-background-dark">
@@ -217,25 +228,30 @@ const SetupScreen: React.FC<{ gameName: string; onStart: (names: string[], aiCon
         <button onClick={onBack} className="flex size-12 shrink-0 items-center justify-start text-white">
           <span className="material-symbols-outlined text-2xl">arrow_back_ios_new</span>
         </button>
-        <h2 className="text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-12">Game Setup</h2>
+        <h2 className="text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-12">Setup</h2>
       </div>
       <main className="flex-grow px-4">
-        <h1 className="text-white text-[32px] font-bold leading-tight tracking-tight pt-6 pb-2">Enter Player Names</h1>
-        <p className="text-zinc-400 text-base pb-8">Enter player names to begin {gameName}.</p>
+        <p className="text-primary text-sm font-bold uppercase tracking-wider pt-6">{gameName}</p>
+        <h1 className="text-white text-[32px] font-bold leading-tight tracking-tight pb-2">Enter Names</h1>
+        <p className="text-zinc-400 text-base pb-8">
+          {isSolo 
+            ? 'Enter your name to begin.' 
+            : `Enter player names to begin.`}
+        </p>
         <div className="flex flex-col gap-4">
-          {INITIAL_PLAYERS.map((player, index) => (
+          {INITIAL_PLAYERS.slice(0, playerCount).map((player, index) => (
             <div key={player.id} className="flex items-center gap-4 bg-zinc-800/40 p-4 rounded-lg">
               <div className="flex items-center gap-4 flex-1">
                 <div 
                   className="flex items-center justify-center rounded-full shrink-0 size-8"
                   style={{ backgroundColor: player.color }}
                 ></div>
-                <p className="text-white text-base font-medium leading-normal w-16">
-                  {['SOUTH', 'WEST', 'NORTH', 'EAST'][index]}
+                <p className="text-white text-base font-medium leading-normal w-20">
+                  {playerLabels[index]}
                 </p>
                 <input
                   className="flex-1 bg-transparent text-white placeholder:text-zinc-400 border-0 p-0 focus:ring-0 text-right outline-none"
-                  placeholder={`Player ${index + 1} Name`}
+                  placeholder={isSolo ? 'Name' : (aiEnabled && index >= playerCount - (isTwoPlayer ? 1 : aiCount) ? `Bot ${index + 1}` : 'Name')}
                   value={names[index]}
                   onChange={(e) => handleNameChange(index, e.target.value)}
                   type="text"
@@ -244,38 +260,45 @@ const SetupScreen: React.FC<{ gameName: string; onStart: (names: string[], aiCon
             </div>
           ))}
         </div>
-        <div className="mt-6 p-4 bg-zinc-800/40 rounded-lg">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-white font-medium">AI Players</p>
-              <p className="text-zinc-400 text-sm">Add computer players</p>
+        {!isSolo && (
+          <div className="mt-6 p-4 bg-zinc-800/40 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-white font-medium flex items-center gap-2">
+                  <span className="material-symbols-outlined text-lg">smart_toy</span>
+                  AI Mode
+                </p>
+                <p className="text-zinc-400 text-sm">
+                  {isTwoPlayer ? 'Play against computer' : 'Number of AI Players:'}
+                </p>
+              </div>
+              <button 
+                onClick={() => setAiEnabled(!aiEnabled)}
+                className={`w-12 h-6 rounded-full transition-colors ${aiEnabled ? 'bg-primary' : 'bg-zinc-600'}`}
+              >
+                <div className={`w-5 h-5 bg-white rounded-full transition-transform ${aiEnabled ? 'translate-x-6' : 'translate-x-0.5'}`}></div>
+              </button>
             </div>
-            <button 
-              onClick={() => setAiEnabled(!aiEnabled)}
-              className={`w-12 h-6 rounded-full transition-colors ${aiEnabled ? 'bg-primary' : 'bg-zinc-600'}`}
-            >
-              <div className={`w-5 h-5 bg-white rounded-full transition-transform ${aiEnabled ? 'translate-x-6' : 'translate-x-0.5'}`}></div>
-            </button>
+            {aiEnabled && !isTwoPlayer && (
+              <div className="mt-4 flex items-center gap-4">
+                <span className="text-zinc-400 text-sm">Number of AI Players:</span>
+                {[1, 2, 3].map(num => (
+                  <button
+                    key={num}
+                    onClick={() => setAiCount(num)}
+                    className={`px-4 py-2 rounded-lg font-bold text-sm ${aiCount === num ? 'bg-primary text-white' : 'bg-zinc-700 text-zinc-300'}`}
+                  >
+                    {num} Bot{num > 1 ? 's' : ''}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-          {aiEnabled && (
-            <div className="mt-4 flex items-center gap-4">
-              <span className="text-zinc-400 text-sm">AI Count:</span>
-              {[1, 2, 3].map(num => (
-                <button
-                  key={num}
-                  onClick={() => setAiCount(num)}
-                  className={`px-4 py-2 rounded-lg font-bold ${aiCount === num ? 'bg-primary text-white' : 'bg-zinc-700 text-zinc-300'}`}
-                >
-                  {num}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        )}
       </main>
       <div className="p-4 pt-8 sticky bottom-0 bg-gradient-to-t from-background-dark to-transparent">
         <button
-          onClick={() => onStart(names, { enabled: aiEnabled, count: aiCount })}
+          onClick={() => onStart(names, { enabled: aiEnabled, count: isTwoPlayer ? 1 : aiCount })}
           disabled={!canStart}
           className={`w-full h-14 rounded-lg font-bold text-base transition-all ${
             canStart 
@@ -1074,7 +1097,7 @@ const App: React.FC = () => {
     }
     
     if (gameState.phase === GamePhase.SETUP) {
-      return <SetupScreen gameName={currentGame.title} onStart={initGame} onBack={handleGoHome} />;
+      return <SetupScreen gameName={currentGame.title} gameId={gameState.gameId} onStart={initGame} onBack={handleGoHome} />;
     }
     
     if (gameState.phase === GamePhase.LEADERBOARD) {
