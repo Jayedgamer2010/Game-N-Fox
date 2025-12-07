@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { GamePhase, Player, GameState, GameId } from './types';
 import { INITIAL_PLAYERS, MAX_ROUNDS, GAMES, ROTATIONS, PLAYER_DIRECTIONS, CONFETTI_COLORS, CONFETTI_SHAPES } from './constants';
 import redSuitBackground from '@assets/generated_images/red_suited_guard_figure.png';
+import QuadMatchRoyale from './QuadMatchRoyale';
 
 const BGM_URL = "https://cdn.pixabay.com/download/audio/2022/11/22/audio_febc508520.mp3?filename=fun-life-112188.mp3";
 const START_SFX_URL = "https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3";
@@ -167,6 +168,7 @@ const HomeScreen: React.FC<{ onSelectGame: (id: GameId) => void }> = ({ onSelect
       case GameId.SLIDING_PUZZLE: return 'apps';
       case GameId.SPACE_RACE: return 'rocket_launch';
       case GameId.CASTLE_SIEGE: return 'castle';
+      case GameId.QUAD_MATCH: return 'style';
       default: return 'sports_esports';
     }
   };
@@ -1251,7 +1253,14 @@ const App: React.FC = () => {
     }
     
     if (gameState.phase === GamePhase.SETUP) {
+      if (gameState.gameId === GameId.QUAD_MATCH) {
+        return <QuadMatchRoyale onExit={handleGoHome} />;
+      }
       return <SetupScreen gameName={currentGame.title} gameId={gameState.gameId} onStart={initGame} onBack={handleGoHome} />;
+    }
+    
+    if (gameState.gameId === GameId.QUAD_MATCH && gameState.phase === GamePhase.PLAYING) {
+      return <QuadMatchRoyale onExit={handleGoHome} />;
     }
     
     if (gameState.phase === GamePhase.LEADERBOARD) {
