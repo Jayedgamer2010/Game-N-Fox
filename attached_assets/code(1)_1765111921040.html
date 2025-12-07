@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Game Selection Home</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#1e94f6",
+              "background-light": "#f5f7f8",
+              "background-dark": "#101a22",
+            },
+            fontFamily: {
+              "display": ["Plus Jakarta Sans", "Noto Sans", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="relative flex min-h-screen w-full flex-col">
+<!-- Main Content -->
+<main class="flex-1 pb-24">
+<!-- Top App Bar -->
+<div class="flex items-center bg-background-light dark:bg-background-dark p-4 pb-2 justify-between sticky top-0 z-10">
+<div class="flex h-12 w-12 shrink-0 items-center justify-start text-zinc-900 dark:text-white">
+<span class="material-symbols-outlined !text-3xl">stadia_controller</span>
+</div>
+<h1 class="text-zinc-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1">Game Lobby</h1>
+</div>
+<!-- Featured Game Card -->
+<div class="p-4">
+<div class="bg-cover bg-center flex flex-col items-stretch justify-end rounded-xl pt-[132px]" data-alt="Stylized illustration of a cartoonish thief running from a police officer" style='background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0) 100%), url("https://lh3.googleusercontent.com/aida-public/AB6AXuChydtdEEmFRREs1MJ00Q1MlW0mP4iaQx82VhOM-T8VUvVXnGoL7Oipy-7BTJnDpcqzyv0Ay0uRNvHEx13-Gvr6OWxlKt_V7aH9-bcxUg39gM2MM_oIkM9B4wwueTwJH0pxSx_e1ouzPHjDfcjShwHXji_HKTcW8GrNNiTMMXrGNZGvwBtpItFfluTXRXYHd3LXCCbE5I6ydt6DXw3XKA7-cPZTe6GA--oXNm4xdzO-1_e0kR4mh19TlXsbc0JqsmYOQGcWVZceD_Q");'>
+<div class="flex w-full items-end justify-between gap-4 p-4">
+<div class="flex max-w-[440px] flex-1 flex-col gap-1">
+<p class="text-white tracking-light text-2xl font-bold leading-tight max-w-[440px]">Thief and Police</p>
+<p class="text-white text-base font-medium leading-normal">Who can you trust? A game of deception.</p>
+</div>
+<button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em]">
+<span class="truncate">Play Now</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Section Header -->
+<h2 class="text-zinc-900 dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">More Games</h2>
+<!-- Image Grid -->
+<div class="grid grid-cols-[repeat(auto-fit,minmax(158px,1fr))] gap-3 px-4">
+<div class="flex flex-col gap-3 pb-3">
+<div class="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-lg" data-alt="Image of a golden crown on a royal cushion" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBityW_d4XQrBMWNxGM5Avz_2DZtN5XzD5RKICQqd6rjA5D3Sr8n4detl8GZ0BVHB3K6j4H-YcxZH8NecyYLnEzAb5MoiI5AVaImvsrZzS5Bn0xLOn3v2wonaBiMr0LKQo5GwcdwvFXp9zQEtwJKgKvq6XNTxzB6t_PSKi7JwR-jxj8KyU_gq7BZFu0fVR8pgBI_foZE-e3UoQnTdjCd4K_Hb9_T9V7b9rSRsbJLuMkrurUrFYIcFPr1TOhNCOffm5df5r4tCtyyy4");'></div>
+<div>
+<p class="text-zinc-900 dark:text-white text-base font-medium leading-normal">King's Court</p>
+<p class="text-zinc-500 dark:text-gray-400 text-sm font-normal leading-normal">4 Players</p>
+</div>
+</div>
+<div class="flex flex-col gap-3 pb-3">
+<div class="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-lg" data-alt="Image of an open treasure chest filled with gold coins" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAOym2CaIOnae598m-XEaq5wMeDYdqFryalsqoXNChsiU3Z6vQw2DLjmvt7JGsoryfkecaj5jYsDwau11u07DL6d--24axd1ntO5DdC59fngO-T-1zhSrdbn8xPn-Y3fqK94mMR2zJrXGFv9J20rPo3Xj6uuZfyobJoCC7Q-AZtIGPrSN80IdwkgbVOAlYrUneAQXp0_mDzCVLGKaz6rGtoXUjEL2bqrKGnzWD_tHbeif9t-KmMLdcrOleLe9NWFNyXi701QNpIo_E");'></div>
+<div>
+<p class="text-zinc-900 dark:text-white text-base font-medium leading-normal">Treasure Hunt</p>
+<p class="text-zinc-500 dark:text-gray-400 text-sm font-normal leading-normal">2-4 Players</p>
+</div>
+</div>
+<div class="flex flex-col gap-3 pb-3">
+<div class="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-lg" data-alt="Image of a rocket launching into space" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA4T38Xxj9p18EyP9axwotYgeMN2nwwp1S-yA3SMqYDWTIB3yTk-2tdKc-vga1nsuRJltzrGTjNUWTU7OzXNm__y-Rfu88OjP6We02my6lpHpfjpa3q8TwORffoYe7Wd805cJgqDKx1-zr70dpM5axS7BAck8RllHgdbIcR1QxPaGTzG_wbrrwV3RZvIok1-QsafDXE2bVwo6emww549ezk3xKt5U1EMchVyRGRP0j0gMcDGo-CZp2e9k9v5FyZmjLxaTVWMyoTgpU");'></div>
+<div>
+<p class="text-zinc-900 dark:text-white text-base font-medium leading-normal">Space Race</p>
+<p class="text-zinc-500 dark:text-gray-400 text-sm font-normal leading-normal">3 Players</p>
+</div>
+</div>
+<div class="flex flex-col gap-3 pb-3">
+<div class="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-lg" data-alt="Image of a fantasy castle on a hill" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBBs2REDJtKkYc_7O808Hzoy2IXs6pHtmGmPOWBrx7toA5Osccd7ipx7GI6tq3NelYTD0wvRFELDDldlGiyOwmniuof3uu5k7iNyHOp6wQkmwnafBhVFg7g4cxsZOFQTcFS3jHk9G8jn9Bq_r8Lan6c8fVMcJKcGsInaCWikuOfLvQgnt2Tyl86zXlsDkvSFYGZoWOw-pohaq1DWC8TK8uI3g3iyJOU_w1-_eR_dWc9k7SiKQ5NibCWKk2eMu496KeIaNGe6hUuy90");'></div>
+<div>
+<p class="text-zinc-900 dark:text-white text-base font-medium leading-normal">Castle Siege</p>
+<p class="text-zinc-500 dark:text-gray-400 text-sm font-normal leading-normal">2-6 Players</p>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Nav Bar -->
+<nav class="fixed bottom-0 left-0 right-0 flex gap-2 border-t border-zinc-200 dark:border-zinc-800 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-lg px-4 pb-3 pt-2">
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-primary" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
+</div>
+<p class="text-xs font-medium leading-normal tracking-[0.015em]">Home</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-zinc-500 dark:text-gray-400" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined">group</span>
+</div>
+<p class="text-xs font-medium leading-normal tracking-[0.015em]">Friends</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-zinc-500 dark:text-gray-400" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined">person</span>
+</div>
+<p class="text-xs font-medium leading-normal tracking-[0.015em]">Profile</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-zinc-500 dark:text-gray-400" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined">settings</span>
+</div>
+<p class="text-xs font-medium leading-normal tracking-[0.015em]">Settings</p>
+</a>
+</nav>
+</div>
+</body></html>

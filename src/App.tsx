@@ -154,71 +154,123 @@ const TutorialOverlay: React.FC<{ gameId: GameId; onDismiss: () => void }> = ({ 
 };
 
 const HomeScreen: React.FC<{ onSelectGame: (id: GameId) => void }> = ({ onSelectGame }) => {
+  const allGames = Object.values(GAMES);
+  const featuredGame = allGames.find(g => g.id === GameId.THIEF_POLICE) || allGames[0];
+  const otherGames = allGames.filter(g => g.id !== featuredGame.id);
+
+  const getGameIcon = (gameId: GameId) => {
+    switch(gameId) {
+      case GameId.THIEF_POLICE: return 'local_police';
+      case GameId.COLOR_WAR: return 'palette';
+      case GameId.TIC_TAC_TOE: return 'grid_3x3';
+      case GameId.SLIDING_PUZZLE: return 'apps';
+      case GameId.SPACE_RACE: return 'rocket_launch';
+      case GameId.CASTLE_SIEGE: return 'castle';
+      default: return 'sports_esports';
+    }
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background-dark p-6">
-      <div className="animate-fade-in-up text-center mb-8">
-        <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-blue-600 mb-4 shadow-lg shadow-primary/30 animate-float">
-          <span className="material-symbols-outlined text-5xl text-white">sports_esports</span>
+    <div className="relative flex min-h-screen w-full flex-col bg-background-dark">
+      <main className="flex-1 pb-24">
+        <div className="flex items-center bg-background-dark p-4 pb-2 justify-between sticky top-0 z-10 animate-fade-in-up">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-start text-white">
+            <span className="material-symbols-outlined !text-3xl">stadia_controller</span>
+          </div>
+          <h1 className="text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1">Game Lobby</h1>
         </div>
-        <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">Party Games</h1>
-        <p className="text-zinc-400">Select a game to play</p>
-      </div>
-      <div className="grid grid-cols-1 gap-4 w-full max-w-md">
-        {Object.values(GAMES).map((game, index) => (
+
+        <div className="p-4 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
           <button
-            key={game.id}
-            onClick={() => !game.isComingSoon && onSelectGame(game.id)}
-            disabled={game.isComingSoon}
-            className={`relative overflow-hidden rounded-xl p-5 text-left transition-all duration-300 animate-fade-in-up group ${
-              game.isComingSoon 
-                ? 'opacity-50 cursor-not-allowed bg-zinc-800/50' 
-                : 'bg-zinc-800/80 hover:bg-zinc-700/80 active:scale-[0.98] hover:shadow-lg hover:-translate-y-1'
-            }`}
-            style={{ animationDelay: `${0.1 + index * 0.08}s`, opacity: 0 }}
+            onClick={() => !featuredGame.isComingSoon && onSelectGame(featuredGame.id)}
+            disabled={featuredGame.isComingSoon}
+            className="w-full bg-cover bg-center flex flex-col items-stretch justify-end rounded-xl pt-[132px] relative overflow-hidden group transition-transform active:scale-[0.98]"
+            style={{ 
+              backgroundImage: `linear-gradient(0deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 100%), url("${featuredGame.backgroundImage}")` 
+            }}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-black/30"></div>
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-3">
-                  <div 
-                    className="w-10 h-10 rounded-lg flex items-center justify-center shadow-lg transition-transform group-hover:scale-110"
-                    style={{ backgroundColor: game.themeColor }}
-                  >
-                    <span className="material-symbols-outlined text-white text-xl">
-                      {game.id === GameId.THIEF_POLICE ? 'local_police' : 
-                       game.id === GameId.COLOR_WAR ? 'palette' :
-                       game.id === GameId.TIC_TAC_TOE ? 'grid_3x3' :
-                       game.id === GameId.SLIDING_PUZZLE ? 'apps' :
-                       game.id === GameId.SPACE_RACE ? 'rocket_launch' : 'castle'}
-                    </span>
-                  </div>
-                  <h3 className="text-xl font-bold text-white">{game.title}</h3>
-                </div>
-                {game.isComingSoon && (
-                  <span className="text-xs bg-zinc-600/80 px-2.5 py-1 rounded-full text-zinc-300 backdrop-blur-sm">Coming Soon</span>
-                )}
+            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <div className="flex w-full items-end justify-between gap-4 p-4 relative z-10">
+              <div className="flex max-w-[440px] flex-1 flex-col gap-1">
+                <p className="text-white tracking-tight text-2xl font-bold leading-tight max-w-[440px] text-left">{featuredGame.title}</p>
+                <p className="text-white/90 text-base font-medium leading-normal text-left">{featuredGame.description}</p>
               </div>
-              <p className="text-zinc-400 text-sm ml-13 pl-13">{game.description}</p>
-              <div className="flex items-center gap-4 mt-3 ml-13">
-                <div className="flex items-center gap-1.5 text-xs text-zinc-500">
-                  <span className="material-symbols-outlined text-sm">group</span>
-                  <span>{game.playerCount} Player{game.playerCount > 1 ? 's' : ''}</span>
-                </div>
-                {!game.isComingSoon && (
-                  <div className="flex items-center gap-1.5 text-xs text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span>Play Now</span>
-                    <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                  </div>
-                )}
+              <div className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] shadow-lg shadow-primary/30 group-hover:shadow-xl group-hover:shadow-primary/40 transition-all">
+                <span className="truncate">Play Now</span>
               </div>
             </div>
-            <div 
-              className="absolute -top-10 -right-10 w-32 h-32 opacity-20 blur-2xl transition-all group-hover:opacity-40 group-hover:scale-125"
-              style={{ backgroundColor: game.themeColor }}
-            ></div>
           </button>
-        ))}
-      </div>
+        </div>
+
+        <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>More Games</h2>
+
+        <div className="grid grid-cols-2 gap-3 px-4">
+          {otherGames.map((game, index) => (
+            <button
+              key={game.id}
+              onClick={() => !game.isComingSoon && onSelectGame(game.id)}
+              disabled={game.isComingSoon}
+              className={`flex flex-col gap-3 pb-3 text-left animate-fade-in-up group transition-all ${
+                game.isComingSoon ? 'opacity-60 cursor-not-allowed' : 'hover:scale-[1.02] active:scale-[0.98]'
+              }`}
+              style={{ animationDelay: `${0.25 + index * 0.08}s`, opacity: 0 }}
+            >
+              <div 
+                className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-lg relative overflow-hidden shadow-lg"
+                style={{ backgroundImage: `url("${game.backgroundImage}")` }}
+              >
+                <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                  <div 
+                    className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-transform group-hover:scale-110"
+                    style={{ backgroundColor: game.themeColor }}
+                  >
+                    <span className="material-symbols-outlined text-white text-2xl">{getGameIcon(game.id)}</span>
+                  </div>
+                </div>
+                {game.isComingSoon && (
+                  <div className="absolute top-2 right-2 text-xs bg-black/70 px-2 py-1 rounded-full text-white backdrop-blur-sm">
+                    Coming Soon
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              </div>
+              <div>
+                <p className="text-white text-base font-medium leading-normal">{game.title}</p>
+                <p className="text-zinc-400 text-sm font-normal leading-normal">
+                  {game.playerCount} Player{game.playerCount > 1 ? 's' : ''}
+                </p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </main>
+
+      <nav className="fixed bottom-0 left-0 right-0 flex gap-2 border-t border-zinc-800 bg-background-dark/80 backdrop-blur-lg px-4 pb-3 pt-2 z-20">
+        <div className="flex flex-1 flex-col items-center justify-end gap-1 text-primary">
+          <div className="flex h-8 items-center justify-center">
+            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>home</span>
+          </div>
+          <p className="text-xs font-medium leading-normal tracking-[0.015em]">Home</p>
+        </div>
+        <div className="flex flex-1 flex-col items-center justify-end gap-1 text-zinc-500">
+          <div className="flex h-8 items-center justify-center">
+            <span className="material-symbols-outlined">group</span>
+          </div>
+          <p className="text-xs font-medium leading-normal tracking-[0.015em]">Friends</p>
+        </div>
+        <div className="flex flex-1 flex-col items-center justify-end gap-1 text-zinc-500">
+          <div className="flex h-8 items-center justify-center">
+            <span className="material-symbols-outlined">person</span>
+          </div>
+          <p className="text-xs font-medium leading-normal tracking-[0.015em]">Profile</p>
+        </div>
+        <div className="flex flex-1 flex-col items-center justify-end gap-1 text-zinc-500">
+          <div className="flex h-8 items-center justify-center">
+            <span className="material-symbols-outlined">settings</span>
+          </div>
+          <p className="text-xs font-medium leading-normal tracking-[0.015em]">Settings</p>
+        </div>
+      </nav>
     </div>
   );
 };
