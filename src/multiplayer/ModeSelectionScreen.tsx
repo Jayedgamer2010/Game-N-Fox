@@ -5,6 +5,7 @@ interface ModeSelectionScreenProps {
   onSelectOffline: () => void;
   onSelectOnline: () => void;
   onBack: () => void;
+  backgroundImage?: string;
 }
 
 const ModeSelectionScreen: React.FC<ModeSelectionScreenProps> = ({
@@ -12,9 +13,13 @@ const ModeSelectionScreen: React.FC<ModeSelectionScreenProps> = ({
   onSelectOffline,
   onSelectOnline,
   onBack,
+  backgroundImage,
 }) => {
   return (
-    <div className="relative flex min-h-screen w-full flex-col bg-background-dark">
+    <div 
+      className="relative flex min-h-screen w-full flex-col bg-background-dark bg-cover bg-center bg-fixed"
+      style={backgroundImage ? { backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.65) 100%), url(${backgroundImage})` } : undefined}
+    >
       <div className="absolute inset-0 z-0">
         <div className="h-full w-full bg-gradient-to-b from-primary/10 to-transparent opacity-50"></div>
       </div>

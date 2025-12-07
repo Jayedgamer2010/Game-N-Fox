@@ -9,6 +9,7 @@ interface GameLobbyScreenProps {
   onLeaveRoom: () => void;
   onUpdateSettings: (settings: any) => void;
   error: string | null;
+  backgroundImage?: string;
 }
 
 const GameLobbyScreen: React.FC<GameLobbyScreenProps> = ({
@@ -19,6 +20,7 @@ const GameLobbyScreen: React.FC<GameLobbyScreenProps> = ({
   onLeaveRoom,
   onUpdateSettings,
   error,
+  backgroundImage,
 }) => {
   const [showCode, setShowCode] = useState(true);
   const [copied, setCopied] = useState(false);
@@ -44,8 +46,11 @@ const GameLobbyScreen: React.FC<GameLobbyScreenProps> = ({
   const positions = allPositions.slice(0, maxPlayers);
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col bg-background-dark">
-      <div className="flex items-center bg-background-dark p-4 pb-2 justify-between sticky top-0 z-10">
+    <div 
+      className="relative flex min-h-screen w-full flex-col bg-background-dark bg-cover bg-center bg-fixed"
+      style={backgroundImage ? { backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.65) 100%), url(${backgroundImage})` } : undefined}
+    >
+      <div className="flex items-center bg-transparent p-4 pb-2 justify-between sticky top-0 z-10 backdrop-blur-sm">
         <button
           onClick={onLeaveRoom}
           className="flex size-12 shrink-0 items-center justify-center text-white hover:bg-white/10 rounded-full transition-colors"

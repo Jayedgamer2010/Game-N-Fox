@@ -5,6 +5,7 @@ interface MultiplayerOptionsScreenProps {
   onSelectJoin: () => void;
   onSelectBrowse: () => void;
   onBack: () => void;
+  backgroundImage?: string;
 }
 
 const MultiplayerOptionsScreen: React.FC<MultiplayerOptionsScreenProps> = ({
@@ -12,9 +13,13 @@ const MultiplayerOptionsScreen: React.FC<MultiplayerOptionsScreenProps> = ({
   onSelectJoin,
   onSelectBrowse,
   onBack,
+  backgroundImage,
 }) => {
   return (
-    <div className="relative flex min-h-screen w-full flex-col bg-background-dark">
+    <div 
+      className="relative flex min-h-screen w-full flex-col bg-background-dark bg-cover bg-center bg-fixed"
+      style={backgroundImage ? { backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.65) 100%), url(${backgroundImage})` } : undefined}
+    >
       <header className="flex items-center p-4">
         <button
           onClick={onBack}

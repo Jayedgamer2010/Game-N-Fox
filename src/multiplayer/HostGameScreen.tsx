@@ -13,6 +13,7 @@ interface HostGameScreenProps {
   isConnected: boolean;
   error: string | null;
   maxPlayers: number;
+  backgroundImage?: string;
 }
 
 const HostGameScreen: React.FC<HostGameScreenProps> = ({
@@ -21,6 +22,7 @@ const HostGameScreen: React.FC<HostGameScreenProps> = ({
   isConnected,
   error,
   maxPlayers,
+  backgroundImage,
 }) => {
   const [playerName, setPlayerName] = useState('');
   const [isPublic, setIsPublic] = useState(false);
@@ -45,8 +47,11 @@ const HostGameScreen: React.FC<HostGameScreenProps> = ({
   };
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col bg-background-dark">
-      <div className="flex items-center bg-background-dark p-4 pb-2 justify-between sticky top-0 z-10">
+    <div 
+      className="relative flex min-h-screen w-full flex-col bg-background-dark bg-cover bg-center bg-fixed"
+      style={backgroundImage ? { backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.65) 100%), url(${backgroundImage})` } : undefined}
+    >
+      <div className="flex items-center bg-transparent p-4 pb-2 justify-between sticky top-0 z-10 backdrop-blur-sm">
         <button
           onClick={onBack}
           className="flex size-12 shrink-0 items-center justify-center text-white hover:bg-white/10 rounded-full transition-colors"

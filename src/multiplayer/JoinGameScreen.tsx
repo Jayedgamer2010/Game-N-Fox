@@ -6,6 +6,7 @@ interface JoinGameScreenProps {
   onBack: () => void;
   isConnected: boolean;
   error: string | null;
+  backgroundImage?: string;
 }
 
 const JoinGameScreen: React.FC<JoinGameScreenProps> = ({
@@ -14,6 +15,7 @@ const JoinGameScreen: React.FC<JoinGameScreenProps> = ({
   onBack,
   isConnected,
   error,
+  backgroundImage,
 }) => {
   const [playerName, setPlayerName] = useState('');
   const [gameCode, setGameCode] = useState('');
@@ -32,8 +34,11 @@ const JoinGameScreen: React.FC<JoinGameScreenProps> = ({
   };
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col bg-background-dark overflow-hidden">
-      <div className="flex items-center p-4 pb-2 justify-between bg-background-dark">
+    <div 
+      className="relative flex min-h-screen w-full flex-col bg-background-dark bg-cover bg-center bg-fixed overflow-hidden"
+      style={backgroundImage ? { backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.65) 100%), url(${backgroundImage})` } : undefined}
+    >
+      <div className="flex items-center p-4 pb-2 justify-between bg-transparent backdrop-blur-sm">
         <button
           onClick={onBack}
           className="flex size-12 shrink-0 items-center justify-center text-white hover:bg-white/10 rounded-full transition-colors"

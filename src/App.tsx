@@ -283,7 +283,7 @@ const HomeScreen: React.FC<{ onSelectGame: (id: GameId) => void }> = ({ onSelect
   );
 };
 
-const SetupScreen: React.FC<{ gameName: string; gameId: GameId; onStart: (names: string[], aiConfig: { enabled: boolean; count: number }) => void; onBack: () => void }> = ({ gameName, gameId, onStart, onBack }) => {
+const SetupScreen: React.FC<{ gameName: string; gameId: GameId; onStart: (names: string[], aiConfig: { enabled: boolean; count: number }) => void; onBack: () => void; backgroundImage?: string }> = ({ gameName, gameId, onStart, onBack, backgroundImage }) => {
   const game = GAMES[gameId];
   const playerCount = game.playerCount;
   const isSolo = playerCount === 1;
@@ -308,8 +308,11 @@ const SetupScreen: React.FC<{ gameName: string; gameId: GameId; onStart: (names:
       : PLAYER_DIRECTIONS;
 
   return (
-    <div className="flex flex-col min-h-screen bg-background-dark">
-      <div className="flex items-center p-4 pb-2 justify-between sticky top-0 z-10 bg-background-dark/95 backdrop-blur-sm">
+    <div 
+      className="flex flex-col min-h-screen bg-background-dark bg-cover bg-center bg-fixed"
+      style={backgroundImage ? { backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.65) 100%), url(${backgroundImage})` } : undefined}
+    >
+      <div className="flex items-center p-4 pb-2 justify-between sticky top-0 z-10 bg-transparent backdrop-blur-sm">
         <button onClick={onBack} className="flex size-12 shrink-0 items-center justify-center text-white hover:bg-white/10 rounded-full transition-colors">
           <span className="material-symbols-outlined text-2xl">arrow_back_ios_new</span>
         </button>
@@ -484,11 +487,14 @@ const FloatingScoreHeader: React.FC<{
   );
 };
 
-const Leaderboard: React.FC<{ players: Player[]; onPlayAgain: () => void; onHome: () => void }> = ({ players, onPlayAgain, onHome }) => {
+const Leaderboard: React.FC<{ players: Player[]; onPlayAgain: () => void; onHome: () => void; backgroundImage?: string }> = ({ players, onPlayAgain, onHome, backgroundImage }) => {
   const sortedPlayers = [...players].sort((a, b) => b.totalScore - a.totalScore);
   
   return (
-    <div className="relative flex h-full min-h-screen w-full flex-col items-center overflow-hidden bg-background-dark">
+    <div 
+      className="relative flex h-full min-h-screen w-full flex-col items-center overflow-hidden bg-background-dark bg-cover bg-center bg-fixed"
+      style={backgroundImage ? { backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.65) 100%), url(${backgroundImage})` } : undefined}
+    >
       <div className="absolute inset-0 z-0 pointer-events-none">
         {[...Array(18)].map((_, i) => (
           <ConfettiPiece key={i} index={i} />
@@ -1423,6 +1429,7 @@ const App: React.FC = () => {
           onSelectOffline={handleSelectOffline}
           onSelectOnline={handleSelectOnline}
           onBack={handleGoHome}
+          backgroundImage={redSuitBackground}
         />
       );
     }
@@ -1434,6 +1441,7 @@ const App: React.FC = () => {
           onSelectJoin={handleJoinGame}
           onSelectBrowse={handleBrowseGames}
           onBack={() => setGameState(prev => ({ ...prev, phase: GamePhase.MODE_SELECT }))}
+          backgroundImage={redSuitBackground}
         />
       );
     }
@@ -1446,6 +1454,7 @@ const App: React.FC = () => {
           isConnected={multiplayerState.isConnected}
           error={multiplayerState.error}
           maxPlayers={currentGame.playerCount}
+          backgroundImage={redSuitBackground}
         />
       );
     }
@@ -1458,6 +1467,7 @@ const App: React.FC = () => {
           onBack={() => setGameState(prev => ({ ...prev, phase: GamePhase.MULTIPLAYER_OPTIONS }))}
           isConnected={multiplayerState.isConnected}
           error={multiplayerState.error}
+          backgroundImage={redSuitBackground}
         />
       );
     }
@@ -1471,6 +1481,7 @@ const App: React.FC = () => {
           onBack={() => setGameState(prev => ({ ...prev, phase: GamePhase.MULTIPLAYER_OPTIONS }))}
           isConnected={multiplayerState.isConnected}
           error={multiplayerState.error}
+          backgroundImage={redSuitBackground}
         />
       );
     }
@@ -1485,6 +1496,7 @@ const App: React.FC = () => {
           onLeaveRoom={handleLeaveRoom}
           onUpdateSettings={updateSettings}
           error={multiplayerState.error}
+          backgroundImage={redSuitBackground}
         />
       );
     }
@@ -1493,7 +1505,7 @@ const App: React.FC = () => {
       if (gameState.gameId === GameId.QUAD_MATCH) {
         return <QuadMatchRoyale onExit={handleGoHome} />;
       }
-      return <SetupScreen gameName={currentGame.title} gameId={gameState.gameId} onStart={initGame} onBack={handleGoHome} />;
+      return <SetupScreen gameName={currentGame.title} gameId={gameState.gameId} onStart={initGame} onBack={handleGoHome} backgroundImage={redSuitBackground} />;
     }
     
     if (gameState.gameId === GameId.QUAD_MATCH && gameState.phase === GamePhase.PLAYING) {
@@ -1501,7 +1513,7 @@ const App: React.FC = () => {
     }
     
     if (gameState.phase === GamePhase.LEADERBOARD) {
-      return <Leaderboard players={gameState.players} onPlayAgain={handleReset} onHome={handleGoHome} />;
+      return <Leaderboard players={gameState.players} onPlayAgain={handleReset} onHome={handleGoHome} backgroundImage={redSuitBackground} />;
     }
 
     const policePlayer = gameState.policePlayerIndex >= 0 ? gameState.players[gameState.policePlayerIndex] : null;

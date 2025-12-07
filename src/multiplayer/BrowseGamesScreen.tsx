@@ -8,6 +8,7 @@ interface BrowseGamesScreenProps {
   onBack: () => void;
   isConnected: boolean;
   error: string | null;
+  backgroundImage?: string;
 }
 
 const BrowseGamesScreen: React.FC<BrowseGamesScreenProps> = ({
@@ -17,6 +18,7 @@ const BrowseGamesScreen: React.FC<BrowseGamesScreenProps> = ({
   onBack,
   isConnected,
   error,
+  backgroundImage,
 }) => {
   const [playerName, setPlayerName] = useState('');
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
@@ -77,8 +79,11 @@ const BrowseGamesScreen: React.FC<BrowseGamesScreenProps> = ({
   };
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col bg-background-dark overflow-x-hidden">
-      <div className="flex items-center bg-background-dark p-4 pb-2 justify-between sticky top-0 z-10">
+    <div 
+      className="relative flex min-h-screen w-full flex-col bg-background-dark bg-cover bg-center bg-fixed overflow-x-hidden"
+      style={backgroundImage ? { backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.65) 100%), url(${backgroundImage})` } : undefined}
+    >
+      <div className="flex items-center bg-transparent p-4 pb-2 justify-between sticky top-0 z-10 backdrop-blur-sm">
         <button
           onClick={onBack}
           className="text-white flex size-12 shrink-0 items-center justify-start -ml-3 hover:bg-white/10 rounded-full transition-colors"
