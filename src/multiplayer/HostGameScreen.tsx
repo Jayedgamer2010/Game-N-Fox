@@ -7,10 +7,12 @@ interface HostGameScreenProps {
     aiCount: number;
     gameMode: string;
     deckTheme: string;
+    maxPlayers: number;
   }) => void;
   onBack: () => void;
   isConnected: boolean;
   error: string | null;
+  maxPlayers: number;
 }
 
 const HostGameScreen: React.FC<HostGameScreenProps> = ({
@@ -18,6 +20,7 @@ const HostGameScreen: React.FC<HostGameScreenProps> = ({
   onBack,
   isConnected,
   error,
+  maxPlayers,
 }) => {
   const [playerName, setPlayerName] = useState('');
   const [isPublic, setIsPublic] = useState(false);
@@ -26,15 +29,17 @@ const HostGameScreen: React.FC<HostGameScreenProps> = ({
   const [deckTheme, setDeckTheme] = useState('default');
 
   const canCreate = playerName.trim().length >= 2 && isConnected;
+  const maxAiPlayers = maxPlayers - 1;
 
   const handleCreate = () => {
     if (canCreate) {
       onCreateGame({
         playerName: playerName.trim(),
         isPublic,
-        aiCount,
+        aiCount: Math.min(aiCount, maxAiPlayers),
         gameMode,
         deckTheme,
+        maxPlayers,
       });
     }
   };
@@ -114,7 +119,7 @@ const HostGameScreen: React.FC<HostGameScreenProps> = ({
                 </button>
                 <span className="text-base font-medium w-6 text-center">{aiCount}</span>
                 <button
-                  onClick={() => setAiCount(Math.min(3, aiCount + 1))}
+                  onClick={() => setAiCount(Math.min(maxAiPlayers, aiCount + 1))}
                   className="text-lg font-medium leading-normal flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white cursor-pointer hover:bg-primary/80 transition-colors"
                 >
                   +

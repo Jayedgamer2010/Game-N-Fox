@@ -120,7 +120,7 @@ export function useWebSocket() {
     }
   }, []);
 
-  const createRoom = useCallback((playerName: string, isPublic: boolean, aiCount: number, gameMode: string, deckTheme: string) => {
+  const createRoom = useCallback((playerName: string, isPublic: boolean, aiCount: number, gameMode: string, deckTheme: string, maxPlayers: number = 4) => {
     setState(prev => ({ ...prev, playerName }));
     send({
       type: 'create_room',
@@ -129,6 +129,7 @@ export function useWebSocket() {
       aiCount,
       gameMode,
       deckTheme,
+      maxPlayers,
     });
   }, [send]);
 

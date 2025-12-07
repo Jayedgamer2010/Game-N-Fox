@@ -28,6 +28,7 @@ const GameLobbyScreen: React.FC<GameLobbyScreenProps> = ({
   const allReady = room.players.every(p => p.isReady);
   const hasEnoughPlayers = room.players.length + room.aiCount >= 2;
   const canStart = isHost && allReady && hasEnoughPlayers;
+  const maxPlayers = room.maxPlayers;
 
   const copyCode = async () => {
     try {
@@ -39,7 +40,8 @@ const GameLobbyScreen: React.FC<GameLobbyScreenProps> = ({
     }
   };
 
-  const positions = ['South', 'West', 'North', 'East'];
+  const allPositions = ['South', 'West', 'North', 'East'];
+  const positions = allPositions.slice(0, maxPlayers);
 
   return (
     <div className="relative flex min-h-screen w-full flex-col bg-background-dark">
@@ -85,7 +87,7 @@ const GameLobbyScreen: React.FC<GameLobbyScreenProps> = ({
         </div>
 
         <h2 className="text-white text-xl font-bold leading-tight tracking-[-0.015em] pb-4">
-          Players ({room.players.length + room.aiCount}/4)
+          Players ({room.players.length + room.aiCount}/{room.maxPlayers})
         </h2>
 
         <div className="space-y-3 mb-6">
@@ -170,7 +172,7 @@ const GameLobbyScreen: React.FC<GameLobbyScreenProps> = ({
                 </button>
                 <span className="text-white w-6 text-center">{room.aiCount}</span>
                 <button
-                  onClick={() => onUpdateSettings({ aiCount: Math.min(3 - room.players.length, room.aiCount + 1) })}
+                  onClick={() => onUpdateSettings({ aiCount: Math.min(maxPlayers - room.players.length, room.aiCount + 1) })}
                   className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white hover:bg-primary/80"
                 >
                   +

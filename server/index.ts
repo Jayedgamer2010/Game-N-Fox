@@ -153,7 +153,7 @@ wss.on('connection', (socket) => {
               isHost: true,
               isReady: true,
             }],
-            maxPlayers: 4,
+            maxPlayers: message.maxPlayers ?? 4,
             isPublic: message.isPublic ?? false,
             aiCount: message.aiCount ?? 0,
             gameMode: message.gameMode ?? 'classic',

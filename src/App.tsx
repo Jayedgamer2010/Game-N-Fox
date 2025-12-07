@@ -688,8 +688,8 @@ const App: React.FC = () => {
     getPublicRooms();
   };
 
-  const handleCreateGame = (settings: { playerName: string; isPublic: boolean; aiCount: number; gameMode: string; deckTheme: string }) => {
-    createRoom(settings.playerName, settings.isPublic, settings.aiCount, settings.gameMode, settings.deckTheme);
+  const handleCreateGame = (settings: { playerName: string; isPublic: boolean; aiCount: number; gameMode: string; deckTheme: string; maxPlayers: number }) => {
+    createRoom(settings.playerName, settings.isPublic, settings.aiCount, settings.gameMode, settings.deckTheme, settings.maxPlayers);
   };
 
   const handleJoinRoom = (playerName: string, roomCode: string) => {
@@ -716,7 +716,8 @@ const App: React.FC = () => {
       }
       if (multiplayerState.room.status === 'playing' && gameState.phase === GamePhase.GAME_LOBBY) {
         const roomPlayers = multiplayerState.room.players;
-        const newPlayers = INITIAL_PLAYERS.slice(0, 4).map((p, i) => {
+        const maxPlayers = multiplayerState.room.maxPlayers;
+        const newPlayers = INITIAL_PLAYERS.slice(0, maxPlayers).map((p, i) => {
           const roomPlayer = roomPlayers[i];
           const isAi = !roomPlayer && i < roomPlayers.length + multiplayerState.room!.aiCount;
           return {
@@ -1380,6 +1381,7 @@ const App: React.FC = () => {
           onBack={() => setGameState(prev => ({ ...prev, phase: GamePhase.MULTIPLAYER_OPTIONS }))}
           isConnected={multiplayerState.isConnected}
           error={multiplayerState.error}
+          maxPlayers={currentGame.playerCount}
         />
       );
     }
