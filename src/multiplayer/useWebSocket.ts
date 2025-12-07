@@ -1,7 +1,24 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { RoomInfo, ServerMessage, MultiplayerState } from './types';
 
-export function useWebSocket() {
+export interface GameActionData {
+  playerId: string;
+  action: string;
+  data: any;
+}
+
+export interface GameStateUpdateData {
+  gameState: any;
+}
+
+export interface UseWebSocketOptions {
+  onGameAction?: (data: GameActionData) => void;
+  onGameStateUpdate?: (data: GameStateUpdateData) => void;
+  onGameStarted?: () => void;
+  onGameEnded?: (results: any) => void;
+}
+
+export function useWebSocket(options: UseWebSocketOptions = {}) {
   const [state, setState] = useState<MultiplayerState>({
     mode: null,
     option: null,
@@ -15,45 +32,15 @@ export function useWebSocket() {
   const [publicRooms, setPublicRooms] = useState<RoomInfo[]>([]);
   const socketRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const optionsRef = useRef(options);
+  const modeRef = useRef(state.mode);
 
-  const connect = useCallback(() => {
-    if (socketRef.current?.readyState === WebSocket.OPEN) return;
+  useEffect(() => {
+    optionsRef.current = options;
+  }, [options]);
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
-    
-    const socket = new WebSocket(wsUrl);
-    socketRef.current = socket;
-
-    socket.onopen = () => {
-      setState(prev => ({ ...prev, isConnected: true, error: null }));
-      console.log('WebSocket connected');
-    };
-
-    socket.onclose = () => {
-      setState(prev => ({ ...prev, isConnected: false }));
-      console.log('WebSocket disconnected');
-      
-      reconnectTimeoutRef.current = setTimeout(() => {
-        if (state.mode === 'online') {
-          connect();
-        }
-      }, 3000);
-    };
-
-    socket.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      setState(prev => ({ ...prev, error: 'Connection error' }));
-    };
-
-    socket.onmessage = (event) => {
-      try {
-        const message: ServerMessage = JSON.parse(event.data);
-        handleMessage(message);
-      } catch (error) {
-        console.error('Error parsing message:', error);
-      }
-    };
+  useEffect(() => {
+    modeRef.current = state.mode;
   }, [state.mode]);
 
   const handleMessage = useCallback((message: ServerMessage) => {
@@ -81,8 +68,39 @@ export function useWebSocket() {
       case 'game_started':
         setState(prev => ({ 
           ...prev, 
-          room: { ...prev.room!, status: 'playing' } 
+          room: prev.room ? { ...prev.room, status: 'playing' } : null
         }));
+        if (optionsRef.current.onGameStarted) {
+          optionsRef.current.onGameStarted();
+        }
+        break;
+
+      case 'game_action':
+        if (optionsRef.current.onGameAction) {
+          optionsRef.current.onGameAction({
+            playerId: message.playerId,
+            action: message.action,
+            data: message.data,
+          });
+        }
+        break;
+
+      case 'game_state_updated':
+        if (optionsRef.current.onGameStateUpdate) {
+          optionsRef.current.onGameStateUpdate({
+            gameState: message.gameState,
+          });
+        }
+        break;
+
+      case 'game_ended':
+        setState(prev => ({
+          ...prev,
+          room: prev.room ? { ...prev.room, status: 'finished' } : null
+        }));
+        if (optionsRef.current.onGameEnded) {
+          optionsRef.current.onGameEnded(message.results);
+        }
         break;
 
       case 'public_rooms':
@@ -97,6 +115,46 @@ export function useWebSocket() {
         break;
     }
   }, []);
+
+  const connect = useCallback(() => {
+    if (socketRef.current?.readyState === WebSocket.OPEN) return;
+
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    
+    const socket = new WebSocket(wsUrl);
+    socketRef.current = socket;
+
+    socket.onopen = () => {
+      setState(prev => ({ ...prev, isConnected: true, error: null }));
+      console.log('WebSocket connected');
+    };
+
+    socket.onclose = () => {
+      setState(prev => ({ ...prev, isConnected: false }));
+      console.log('WebSocket disconnected');
+      
+      reconnectTimeoutRef.current = setTimeout(() => {
+        if (modeRef.current === 'online') {
+          connect();
+        }
+      }, 3000);
+    };
+
+    socket.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      setState(prev => ({ ...prev, error: 'Connection error' }));
+    };
+
+    socket.onmessage = (event) => {
+      try {
+        const message: ServerMessage = JSON.parse(event.data);
+        handleMessage(message);
+      } catch (error) {
+        console.error('Error parsing message:', error);
+      }
+    };
+  }, [handleMessage]);
 
   const disconnect = useCallback(() => {
     if (reconnectTimeoutRef.current) {

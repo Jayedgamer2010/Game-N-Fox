@@ -602,6 +602,42 @@ const App: React.FC = () => {
   const timerIntervalRef = useRef<number | null>(null);
   const [isMultiplayerMode, setIsMultiplayerMode] = useState(false);
 
+  const handleGameStateUpdate = useCallback((data: { gameState: any }) => {
+    console.log('Received game state update from other player:', data.gameState);
+    setGameState(prev => ({
+      ...prev,
+      ...data.gameState,
+    }));
+  }, []);
+
+  const handleGameAction = useCallback((data: { playerId: string; action: string; data: any }) => {
+    console.log('Received game action from player:', data.playerId, data.action, data.data);
+    if (data.action === 'ttt_move') {
+      const { xMoves, oMoves, nextTurn, winLine, winner, players, phase } = data.data;
+      setGameState(prev => ({
+        ...prev,
+        xMoves: xMoves ?? prev.xMoves,
+        oMoves: oMoves ?? prev.oMoves,
+        tttTurn: nextTurn,
+        tttWinningLine: winLine || null,
+        tttWinner: winner || null,
+        players: players || prev.players,
+        phase: phase || prev.phase,
+      }));
+    } else if (data.action === 'color_war_move') {
+      const { board, activePlayerId, turnCount, phase, players } = data.data;
+      setGameState(prev => ({
+        ...prev,
+        board,
+        activePlayerId,
+        turnCount,
+        selectedCell: null,
+        phase: phase || prev.phase,
+        players: players || prev.players,
+      }));
+    }
+  }, []);
+
   const {
     state: multiplayerState,
     publicRooms,
@@ -614,7 +650,12 @@ const App: React.FC = () => {
     updateSettings,
     setMode: setMultiplayerMode,
     setOption: setMultiplayerOption,
-  } = useWebSocket();
+    sendGameAction,
+    updateGameState,
+  } = useWebSocket({
+    onGameStateUpdate: handleGameStateUpdate,
+    onGameAction: handleGameAction,
+  });
 
   const currentGame = GAMES[gameState.gameId];
 
@@ -1095,41 +1136,56 @@ const App: React.FC = () => {
 
     playSfx(SELECT_SFX_URL);
 
-    setGameState(prev => {
-      const isX = prev.tttTurn === 'X';
-      const currentMoves = isX ? [...(prev.xMoves || [])] : [...(prev.oMoves || [])];
-      const nextMoves = [...currentMoves, index];
-      
-      if (nextMoves.length > 3) nextMoves.shift();
+    const isX = gameState.tttTurn === 'X';
+    const currentMoves = isX ? [...(gameState.xMoves || [])] : [...(gameState.oMoves || [])];
+    const nextMoves = [...currentMoves, index];
+    
+    if (nextMoves.length > 3) nextMoves.shift();
 
-      const winLine = checkTicTacToeWin(nextMoves);
-      const nextTurn = isX ? 'O' : 'X';
-      const nextX = isX ? nextMoves : prev.xMoves;
-      const nextO = isX ? prev.oMoves : nextMoves;
+    const winLine = checkTicTacToeWin(nextMoves);
+    const nextTurn = isX ? 'O' : 'X';
+    const nextX = isX ? nextMoves : gameState.xMoves;
+    const nextO = isX ? gameState.oMoves : nextMoves;
 
-      let newState = {
-        ...prev,
+    let updatedPlayers = gameState.players;
+    let newPhase = gameState.phase;
+
+    if (winLine) {
+      playSfx(ROUND_END_SFX_URL);
+      const points = GAMES[GameId.TIC_TAC_TOE].points;
+      updatedPlayers = gameState.players.map((p, i) => {
+        let pts = 0;
+        if (isX && i === 0) pts = points.WIN;
+        if (!isX && i === 1) pts = points.WIN;
+        return { ...p, totalScore: p.totalScore + pts, roundPoints: pts };
+      });
+      newPhase = GamePhase.LEADERBOARD;
+    }
+
+    if (isMultiplayerMode && multiplayerState.isConnected) {
+      sendGameAction('ttt_move', {
+        index,
+        isX,
         xMoves: nextX,
         oMoves: nextO,
-        tttTurn: nextTurn,
-        tttWinningLine: winLine || null,
-        tttWinner: winLine ? (isX ? 'X' : 'O') : null
-      };
+        nextTurn,
+        winLine: winLine || null,
+        winner: winLine ? (isX ? 'X' : 'O') : null,
+        players: winLine ? updatedPlayers : null,
+        phase: winLine ? newPhase : null,
+      });
+    }
 
-      if (winLine) {
-        playSfx(ROUND_END_SFX_URL);
-        const points = GAMES[GameId.TIC_TAC_TOE].points;
-        const updatedPlayers = prev.players.map((p, i) => {
-          let pts = 0;
-          if (isX && i === 0) pts = points.WIN;
-          if (!isX && i === 1) pts = points.WIN;
-          return { ...p, totalScore: p.totalScore + pts, roundPoints: pts };
-        });
-        newState = { ...newState, players: updatedPlayers, phase: GamePhase.LEADERBOARD };
-      }
-
-      return newState;
-    });
+    setGameState(prev => ({
+      ...prev,
+      xMoves: nextX,
+      oMoves: nextO,
+      tttTurn: nextTurn,
+      tttWinningLine: winLine || null,
+      tttWinner: winLine ? (isX ? 'X' : 'O') : null,
+      players: updatedPlayers,
+      phase: newPhase,
+    }));
   };
 
   useEffect(() => {
@@ -1183,83 +1239,91 @@ const App: React.FC = () => {
   const executeColorWarMove = (fromR: number, fromC: number, toR: number, toC: number) => {
     playSfx(SELECT_SFX_URL);
     
-    setGameState(prev => {
-      if (!prev.board) return prev;
-      const activeId = prev.activePlayerId || 1;
-      const board = prev.board.map(row => [...row]);
-      const dr = Math.abs(toR - fromR);
-      const dc = Math.abs(toC - fromC);
-      const isClone = Math.max(dr, dc) === 1;
+    if (!gameState.board) return;
+    
+    const activeId = gameState.activePlayerId || 1;
+    const board = gameState.board.map(row => [...row]);
+    const dr = Math.abs(toR - fromR);
+    const dc = Math.abs(toC - fromC);
+    const isClone = Math.max(dr, dc) === 1;
 
-      if (!isClone) {
-        board[fromR][fromC] = 0;
-      }
-      board[toR][toC] = activeId;
+    if (!isClone) {
+      board[fromR][fromC] = 0;
+    }
+    board[toR][toC] = activeId;
 
-      for (let nr = toR - 1; nr <= toR + 1; nr++) {
-        for (let nc = toC - 1; nc <= toC + 1; nc++) {
-          if (nr >= 0 && nr < 7 && nc >= 0 && nc < 7 && board[nr][nc] !== 0 && board[nr][nc] !== activeId) {
-            board[nr][nc] = activeId;
-          }
+    for (let nr = toR - 1; nr <= toR + 1; nr++) {
+      for (let nc = toC - 1; nc <= toC + 1; nc++) {
+        if (nr >= 0 && nr < 7 && nc >= 0 && nc < 7 && board[nr][nc] !== 0 && board[nr][nc] !== activeId) {
+          board[nr][nc] = activeId;
         }
       }
+    }
 
-      const hasValidMove = (playerId: number) => {
-        for (let r = 0; r < 7; r++) {
-          for (let c = 0; c < 7; c++) {
-            if (board[r][c] === playerId) {
-              for (let tr = 0; tr < 7; tr++) {
-                for (let tc = 0; tc < 7; tc++) {
-                  if (board[tr][tc] === 0 && Math.max(Math.abs(tr - r), Math.abs(tc - c)) <= 2) {
-                    return true;
-                  }
+    const hasValidMove = (playerId: number) => {
+      for (let r = 0; r < 7; r++) {
+        for (let c = 0; c < 7; c++) {
+          if (board[r][c] === playerId) {
+            for (let tr = 0; tr < 7; tr++) {
+              for (let tc = 0; tc < 7; tc++) {
+                if (board[tr][tc] === 0 && Math.max(Math.abs(tr - r), Math.abs(tc - c)) <= 2) {
+                  return true;
                 }
               }
             }
           }
         }
-        return false;
-      };
-
-      let nextId = activeId % 4 + 1;
-      let attempts = 0;
-      while (!hasValidMove(nextId) && attempts < 4) {
-        nextId = nextId % 4 + 1;
-        attempts++;
       }
+      return false;
+    };
 
-      const gameOver = attempts >= 4 || (prev.turnCount || 0) >= 100;
+    let nextId = activeId % 4 + 1;
+    let attempts = 0;
+    while (!hasValidMove(nextId) && attempts < 4) {
+      nextId = nextId % 4 + 1;
+      attempts++;
+    }
 
-      if (gameOver) {
-        const counts = [0, 0, 0, 0];
-        board.forEach(row => row.forEach(cell => {
-          if (cell > 0) counts[cell - 1]++;
-        }));
-        const maxCount = Math.max(...counts);
-        const winnerId = counts.indexOf(maxCount) + 1;
-        
-        const updatedPlayers = prev.players.map((p, i) => ({
-          ...p,
-          totalScore: i === winnerId - 1 ? 1000 : counts[i] * 10
-        }));
-        
-        return {
-          ...prev,
-          board,
-          phase: GamePhase.LEADERBOARD,
-          players: updatedPlayers,
-          selectedCell: null
-        };
-      }
+    const newTurnCount = (gameState.turnCount || 0) + 1;
+    const gameOver = attempts >= 4 || newTurnCount >= 100;
 
-      return {
-        ...prev,
+    let newPhase = gameState.phase;
+    let updatedPlayers = gameState.players;
+
+    if (gameOver) {
+      const counts = [0, 0, 0, 0];
+      board.forEach(row => row.forEach(cell => {
+        if (cell > 0) counts[cell - 1]++;
+      }));
+      const maxCount = Math.max(...counts);
+      const winnerId = counts.indexOf(maxCount) + 1;
+      
+      updatedPlayers = gameState.players.map((p, i) => ({
+        ...p,
+        totalScore: i === winnerId - 1 ? 1000 : counts[i] * 10
+      }));
+      newPhase = GamePhase.LEADERBOARD;
+    }
+
+    if (isMultiplayerMode && multiplayerState.isConnected) {
+      sendGameAction('color_war_move', {
         board,
-        activePlayerId: nextId,
-        selectedCell: null,
-        turnCount: (prev.turnCount || 0) + 1
-      };
-    });
+        activePlayerId: gameOver ? activeId : nextId,
+        turnCount: newTurnCount,
+        phase: gameOver ? newPhase : null,
+        players: gameOver ? updatedPlayers : null,
+      });
+    }
+
+    setGameState(prev => ({
+      ...prev,
+      board,
+      activePlayerId: gameOver ? activeId : nextId,
+      selectedCell: null,
+      turnCount: newTurnCount,
+      phase: newPhase,
+      players: updatedPlayers,
+    }));
   };
 
   useEffect(() => {

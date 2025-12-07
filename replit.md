@@ -139,3 +139,18 @@ Preferred communication style: Simple, everyday language.
   - Special Vite configuration for Replit's networking
   - HMR proxy configuration for live updates
   - Dual workflow: Vite dev server (port 5000) + WebSocket game server (port 3001)
+
+## Recent Changes (December 2024)
+
+### Multiplayer Bug Fixes
+- **Fixed WebSocket message handlers**: Added missing handlers for `game_action` and `game_state_updated` messages in `useWebSocket.ts`
+- **Added multiplayer callbacks**: Introduced `onGameAction`, `onGameStateUpdate`, `onGameStarted`, and `onGameEnded` callback options to the `useWebSocket` hook for proper event handling
+- **Fixed Tic-Tac-Toe sync**: Player moves in Tic-Tac-Toe now broadcast to all players via WebSocket when in multiplayer mode. Both xMoves and oMoves arrays are sent together to ensure consistent state across all clients
+- **Fixed Color War sync**: Color War moves now properly synchronize across all connected players
+- **Fixed stale closure issue**: Resolved reconnection logic using `useRef` to avoid stale state references in WebSocket callbacks
+- **Real-time game state sync**: Both `ttt_move` and `color_war_move` game actions now properly transmit and receive board state, turn information, player scores, and game phase transitions
+
+### Technical Improvements
+- Refactored game move handlers (`handleTicTacToeCellClick`, `executeColorWarMove`) to calculate state outside of `setGameState` for proper WebSocket broadcasting
+- Added `modeRef` and `optionsRef` refs to avoid stale closures in WebSocket event handlers
+- Improved multiplayer state management with dedicated action handlers for each game type
