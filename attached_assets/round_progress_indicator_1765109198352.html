@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Round Progress Indicator</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#1e94f6",
+              "background-light": "#f5f7f8",
+              "background-dark": "#101a22",
+            },
+            fontFamily: {
+              "display": ["Plus Jakarta Sans", "Noto Sans", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            font-size: 24px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="relative flex h-auto min-h-screen w-full flex-col bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAXSZOY4IWnQmECDc0ydxXTTncdNcbWNFEj8890SskR8EEXfuMC6HSy4VVkpwDdS688oSB_2_gGQl1f6Fzhs2j3Q967hCvzxSTZKURyUa7vpnxoAsSIkwr_zXLfrNubSCw2vJ_Zd_UG-IvEx5g9v9JONdVNMUKizPjTmk0WYpQVunJrcNYWz8sVm8U9Z4vNhGtAb-yInzg7406kHMMjDf2xjpIde8wG1s_d4v6LRgNUtDLAtEHc949MJndEfHGjS6GH0GdhxjhxLwI');">
+<!-- Main Content Placeholder -->
+<div class="flex-grow flex items-center justify-center p-4">
+<div class="text-center text-white/80">
+<h1 class="text-4xl font-bold tracking-tight">Game Board Area</h1>
+<p class="mt-2 text-lg">Main content is blurred behind the header</p>
+</div>
+</div>
+<!-- Sticky Header Component -->
+<div class="fixed top-0 left-0 right-0 p-4 pt-8 md:pt-4">
+<div class="mx-auto max-w-lg rounded-xl border border-white/10 bg-black/20 px-4 py-3 shadow-2xl backdrop-blur-xl">
+<!-- Top Section: Round Indicator & Options -->
+<div class="flex items-center justify-between border-b border-white/10 pb-3">
+<button class="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-transparent text-white/80 transition-colors hover:bg-white/10">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h2 class="flex-1 text-center text-lg font-bold leading-tight tracking-tight text-white">Round 5/16</h2>
+<button class="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-transparent text-white/80 transition-colors hover:bg-white/10">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+<!-- Bottom Section: Player Scores -->
+<div class="flex justify-between items-center gap-2 pt-3">
+<!-- Player 1 -->
+<div class="flex flex-1 flex-col items-center gap-1.5 text-center">
+<div class="relative">
+<div class="aspect-square size-11 rounded-full bg-cover bg-center border-2 border-transparent" data-alt="User avatar for Alex" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCiTLYMk_HZqxmQUKh8RHLAFZE45pjzIomJ0MzMQINTDDmbZJY5zK0It5BxN7EBa6QS1HrbptAtoUD00rprnwGi8Uv3zASyP5yX4iAptkyVv4-4wcqnkM-f79QaUITcB771fDTWGQcFg-0dIFdKxMVkN-jrxnXdvNPooGaDmTo-WdekHoxUjd3VG-7c4ta6py76lU-AqdN8aICkPtu6XapuMkAXn_UMbsGPmiqfAz7X8vewM9CQ-mslsbkTmZvXlfAsQYf9Yj0bdW0');"></div>
+</div>
+<div class="text-sm font-medium text-white/70">Alex</div>
+<div class="text-base font-bold text-white">85 pts</div>
+</div>
+<!-- Player 2 -->
+<div class="flex flex-1 flex-col items-center gap-1.5 text-center">
+<div class="relative">
+<div class="aspect-square size-11 rounded-full bg-cover bg-center border-2 border-primary ring-2 ring-primary/50" data-alt="User avatar for Jordan, currently active player"></div>
+<div class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary ring-2 ring-[#101a22]/50">
+<span class="material-symbols-outlined !text-[12px] text-white">star</span>
+</div>
+</div>
+<div class="text-sm font-medium text-primary">Jordan</div>
+<div class="text-base font-bold text-white">120 pts</div>
+</div>
+<!-- Player 3 -->
+<div class="flex flex-1 flex-col items-center gap-1.5 text-center">
+<div class="relative">
+<div class="aspect-square size-11 rounded-full bg-cover bg-center border-2 border-transparent" data-alt="User avatar for Sam" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD63nE53LtRisL-Wt7CCLl8Oa6kFhYfFXxV9aiNyXSSr-JZIPwv3ffeQsU7J5u9SVwVDwlwRmYa5VsY-NL0UnWhHIlgDogiFApiP4oAYgxLlZ6kscQMYYfCygtnCAoY90bWOorm9khB_Q8ujxHFO4GRSNnNe0qDplxFtqPU4qb2KQ1br4_wQluVqNuhJUmrSjwlNgRH7NS8EryWfyhz9Zk9dtTJlwOc3jCcsbrA0vulpSTloZOR9-2t5cDI0N49LG16KF5dopoLys4');"></div>
+</div>
+<div class="text-sm font-medium text-white/70">Sam</div>
+<div class="text-base font-bold text-white">95 pts</div>
+</div>
+<!-- Player 4 -->
+<div class="flex flex-1 flex-col items-center gap-1.5 text-center">
+<div class="relative">
+<div class="aspect-square size-11 rounded-full bg-cover bg-center border-2 border-transparent" data-alt="User avatar for Casey" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuARDyuOJ-61u0rJcaGUtW5vZEkgPpqMjWSDsq122ZnzQYremOjgVHhA7PY9qqfIuT0-NnRLOY8ni3RpelISCEd-39A76ubx6SAD9BZIsEFIhTf8Ddp3-21cNcgS8z8DH6ECRheyf0_FWyhVgD-FLt6AE9sna7gDk1QnVdTfv_EbtFAExcN38hzIP8ljIre-LGzb6SuPo0-U56vi7nzpypc7a5jimnZHCr8drB21OchdfxU0mXRRqiV8-pdpeMCbeZkbNSm2zCaFvSw');"></div>
+</div>
+<div class="text-sm font-medium text-white/70">Casey</div>
+<div class="text-base font-bold text-white">110 pts</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</body></html>
