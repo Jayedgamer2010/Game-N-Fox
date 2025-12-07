@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>QuadMatch Royale: Hosted Games</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#2b6cee",
+              "background-light": "#f5f5f7",
+              "background-dark": "#101622",
+            },
+            fontFamily: {
+              "display": ["Spline Sans", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display">
+<div class="relative flex h-auto min-h-screen w-full flex-col bg-background-light dark:bg-background-dark group/design-root overflow-x-hidden">
+<!-- Top App Bar -->
+<div class="flex items-center bg-background-light dark:bg-background-dark p-4 pb-2 justify-between sticky top-0 z-10">
+<div class="text-slate-800 dark:text-white flex size-12 shrink-0 items-center justify-start -ml-3">
+<span class="material-symbols-outlined text-2xl">arrow_back_ios_new</span>
+</div>
+<h2 class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">Hosted Games</h2>
+<div class="flex size-12 shrink-0 items-center justify-end">
+<span class="material-symbols-outlined text-2xl text-slate-800 dark:text-white">refresh</span>
+</div>
+</div>
+<!-- Search Bar & Filter -->
+<div class="flex items-center gap-3 px-4 py-3">
+<label class="flex flex-col min-w-40 h-12 w-full">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-full">
+<div class="text-slate-500 dark:text-slate-400 flex border-r-0 bg-slate-200 dark:bg-slate-800 items-center justify-center pl-4 rounded-l-lg">
+<span class="material-symbols-outlined text-2xl">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-lg text-slate-900 dark:text-white focus:outline-0 focus:ring-0 border-none bg-slate-200 dark:bg-slate-800 h-full placeholder:text-slate-500 dark:placeholder:text-slate-400 px-4 pl-2 text-base font-normal leading-normal" placeholder="Search by host name..." value=""/>
+</div>
+</label>
+<button class="flex size-12 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-white text-sm font-medium leading-normal">
+<span class="material-symbols-outlined text-2xl">tune</span>
+</button>
+</div>
+<!-- Filter Chips -->
+<div class="flex gap-3 px-4 pt-1 pb-3 overflow-x-auto">
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-primary pl-4 pr-4">
+<p class="text-white text-sm font-medium leading-normal">All</p>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-slate-200 dark:bg-slate-800 pl-4 pr-4">
+<p class="text-slate-800 dark:text-slate-300 text-sm font-medium leading-normal">Waiting</p>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-slate-200 dark:bg-slate-800 pl-4 pr-4">
+<p class="text-slate-800 dark:text-slate-300 text-sm font-medium leading-normal">Starting Soon</p>
+</button>
+<button class="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-lg bg-slate-200 dark:bg-slate-800 pl-4 pr-4">
+<p class="text-slate-800 dark:text-slate-300 text-sm font-medium leading-normal">2/4 Players</p>
+</button>
+</div>
+<!-- Game List -->
+<div class="flex flex-col gap-3 p-4">
+<!-- List Item 1 -->
+<div class="flex flex-col gap-4 bg-white dark:bg-slate-800/50 p-4 rounded-xl">
+<div class="flex items-center gap-4 justify-between">
+<div class="flex items-center gap-4">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-12 w-12" data-alt="User avatar with a blue and purple gradient" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAIKLWCh1PlfzPigDEK44mwsxRrciS9RQcwKS52jS3Bs9-h6vFjq5wCuRTTjSC5lXpQH4bXyaJIbqFub4jOTK1hNVBD57KfzmauA9fsXOJ2OEdkheWpV-0dMZfknteefCfxeqf5jYK9fPIfdLT4qILjmxTUcD7LT6yLsA24EMhClI-ah3TWpPYKRL67Buemit0dmh6zhn5aqWP9pGd0seGYD9sTwSvuFBQ8F041G4EAGpTvNHXaWmHjvPwsYXWhk_NOCkB5RrSZy08");'></div>
+<div class="flex flex-col justify-center">
+<p class="text-slate-900 dark:text-white text-base font-semibold leading-normal line-clamp-1">DragonMasterX</p>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm text-slate-500 dark:text-slate-400">group</span>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal line-clamp-2">2/4 Players</p>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-center rounded-full bg-green-500/20 h-8 px-3">
+<p class="text-green-500 text-xs font-medium uppercase tracking-wider">Waiting</p>
+</div>
+</div>
+<button class="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-11 px-4 bg-primary text-white text-base font-semibold leading-normal">
+<span class="truncate">Join Game</span>
+</button>
+</div>
+<!-- List Item 2 -->
+<div class="flex flex-col gap-4 bg-white dark:bg-slate-800/50 p-4 rounded-xl">
+<div class="flex items-center gap-4 justify-between">
+<div class="flex items-center gap-4">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-12 w-12" data-alt="User avatar with an orange and pink gradient" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCNcIkqd6xr8f1jHw_-HeOw8jMN5o8sTBR5LdQjiKQwder5qkp7oYztKDaoA0K0iO_g39t0-8SPhmeguvxVpvHb4dgT3jjiIXP-0AapVPENXl4ZtK2rn-9SyAUD3RdT_KwnXqaBp1EIdRc9SkZ76v5wgdM6A04ZbX1eGzuKGWbGuOgpCPnY_o6BkBA38-9xhrGdCKl5wVMIXGrduvuxyQTWVlBWIRk1WzXR_-iTA8uNFJ4qASPwQ75kmdvMmK1kl3xx4ybUK_OrrFY");'></div>
+<div class="flex flex-col justify-center">
+<p class="text-slate-900 dark:text-white text-base font-semibold leading-normal line-clamp-1">CardShark99</p>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm text-slate-500 dark:text-slate-400">group</span>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal line-clamp-2">3/4 Players</p>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-center rounded-full bg-orange-500/20 h-8 px-3">
+<p class="text-orange-500 text-xs font-medium uppercase tracking-wider">Starting Soon</p>
+</div>
+</div>
+<button class="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-11 px-4 bg-primary text-white text-base font-semibold leading-normal">
+<span class="truncate">Join Game</span>
+</button>
+</div>
+<!-- List Item 3 -->
+<div class="flex flex-col gap-4 bg-white dark:bg-slate-800/50 p-4 rounded-xl">
+<div class="flex items-center gap-4 justify-between">
+<div class="flex items-center gap-4">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-12 w-12" data-alt="User avatar with a teal and green gradient" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD_MkSa_0uIEO_OxoMvc7Q-8qIak3FgZDy4tA3cXcqZ0Du_P4YD8IiUX_2xDhok0oa5-8KCJyqxFmKgm92ldGefvKxAMOQ2oQoTFVEeLfK6ucwUoX4sH1KzN_ey8zNaKsmFioAQqYEfLRXrt-R11WBVInW3D454xjtMw8YWkVukjx2EYA6IvUgSjWYuPr13ZUpIKwDw-8dthmrW5_yReG5NW7d0NV8jtkPmx_jmiRPF48rXG9bp6f3NeEEhoH9WQOuQgf23SSGKngY");'></div>
+<div class="flex flex-col justify-center">
+<p class="text-slate-900 dark:text-white text-base font-semibold leading-normal line-clamp-1">AceHigh</p>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm text-slate-500 dark:text-slate-400">group</span>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal line-clamp-2">1/4 Players</p>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-center rounded-full bg-green-500/20 h-8 px-3">
+<p class="text-green-500 text-xs font-medium uppercase tracking-wider">Waiting</p>
+</div>
+</div>
+<button class="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-11 px-4 bg-primary text-white text-base font-semibold leading-normal">
+<span class="truncate">Join Game</span>
+</button>
+</div>
+<!-- List Item 4 - Full Game (Disabled) -->
+<div class="flex flex-col gap-4 bg-white dark:bg-slate-800/50 p-4 rounded-xl opacity-60">
+<div class="flex items-center gap-4 justify-between">
+<div class="flex items-center gap-4">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-12 w-12" data-alt="User avatar with a red and purple gradient" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDPrIAXmYvzapYKaXWjizZPJOaIaoFli2kOolKuagZEvpLP1XpPgw9Fx5GSsmHqMshUvayNvt-dmTxL_3QvkXDJ7ROqoDFLG_736_RkST-YOrkAj25XGcEXsorzektARib4JxGIDfS7fsz5gMZ1rFza-hMeH-OgMgLeInkprCexCXrbQrCsixP0fOpN-CXyPHYh52v7IhSORK5mYOMV-uhzmyvFGuOA6ytb6ytAFlAp08OtMLBKu4eKEzJZDMP3wV9Sq9zRWhiokzk");'></div>
+<div class="flex flex-col justify-center">
+<p class="text-slate-900 dark:text-white text-base font-semibold leading-normal line-clamp-1">PokerFace_Pro</p>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm text-slate-500 dark:text-slate-400">group</span>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal line-clamp-2">4/4 Players</p>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-center rounded-full bg-slate-500/20 h-8 px-3">
+<p class="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Full</p>
+</div>
+</div>
+<button class="flex w-full cursor-not-allowed items-center justify-center overflow-hidden rounded-lg h-11 px-4 bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-base font-semibold leading-normal" disabled="">
+<span class="truncate">Join Game</span>
+</button>
+</div>
+</div>
+</div>
+</body></html>
