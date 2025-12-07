@@ -219,17 +219,10 @@ const HomeScreen: React.FC<{ onSelectGame: (id: GameId) => void }> = ({ onSelect
                 className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-lg relative overflow-hidden shadow-lg"
                 style={{ backgroundImage: `url("${game.backgroundImage}")` }}
               >
-                <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                  <div 
-                    className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-transform group-hover:scale-110"
-                    style={{ backgroundColor: game.themeColor }}
-                  >
-                    <span className="material-symbols-outlined text-white text-2xl">{getGameIcon(game.id)}</span>
-                  </div>
-                </div>
                 {game.isComingSoon && (
-                  <div className="absolute top-2 right-2 text-xs bg-black/70 px-2 py-1 rounded-full text-white backdrop-blur-sm">
-                    Coming Soon
+                  <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex items-center gap-1 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-full">
+                    <span className="material-symbols-outlined text-white text-sm">lock</span>
+                    <span className="text-xs text-white font-medium uppercase tracking-wide">Coming Soon</span>
                   </div>
                 )}
                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>

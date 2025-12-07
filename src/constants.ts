@@ -1,4 +1,5 @@
 import { Player, GameId, GameDefinition } from "./types";
+import redSuitBackground from '@assets/generated_images/red_suited_guard_figure.png';
 
 export const INITIAL_PLAYERS: Player[] = [
   { id: 1, name: '', totalScore: 0, currentRole: null, roundPoints: 0, color: '#34C759', isAi: false },
@@ -38,7 +39,7 @@ export const GAMES: Record<GameId, GameDefinition> = {
       CAUGHT: 0
     },
     hasInteractionPhase: true,
-    backgroundImage: "https://images.unsplash.com/photo-1634152962476-4b8a00e1915c?q=80&w=2069&auto=format&fit=crop",
+    backgroundImage: redSuitBackground,
     themeColor: "#1e94f6"
   },
   [GameId.COLOR_WAR]: {
