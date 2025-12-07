@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>QuadMatch Royale: Game Board</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#2b6cee",
+              "background-light": "#f6f6f8",
+              "background-dark": "#101622",
+              "ruby-red": "#9f1239",
+              "sapphire-blue": "#1e40af",
+              "emerald-green": "#065f46",
+              "amethyst-purple": "#581c87",
+            },
+            fontFamily: {
+              "display": ["Spline Sans", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="relative flex h-screen w-full flex-col p-4 pt-6 overflow-hidden">
+<!-- Top App Bar -->
+<div class="flex items-center justify-between pb-2">
+<div class="flex size-12 shrink-0 items-center justify-start">
+<span class="material-symbols-outlined text-white/80" style="font-size: 28px;">neurology</span>
+</div>
+<h2 class="text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">Round 3</h2>
+<div class="flex w-12 items-center justify-end">
+<button class="flex h-12 w-12 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-transparent text-white/80">
+<span class="material-symbols-outlined" style="font-size: 28px;">settings</span>
+</button>
+</div>
+</div>
+<!-- Main Game Board -->
+<div class="flex-1 flex flex-col items-center justify-center relative">
+<!-- Headline Text & Body Text -->
+<div class="absolute top-4 text-center z-10">
+<h2 class="text-white tracking-light text-[28px] font-bold leading-tight">Select a card to pass</h2>
+<p class="text-white/60 text-base font-normal leading-normal pt-1">Your Turn</p>
+</div>
+<!-- Central Arrow Indicator -->
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="relative w-24 h-24">
+<span class="material-symbols-outlined text-white/10 absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2" style="font-size: 32px; transform: rotate(-45deg) translateX(32px) translateY(-32px);">arrow_back</span>
+<span class="material-symbols-outlined text-white/10 absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2" style="font-size: 32px; transform: rotate(135deg) translateX(32px) translateY(-32px);">arrow_back</span>
+<span class="material-symbols-outlined text-white/10 absolute top-1/2 left-0 -translate-x-1/2 -translate-y-1/2" style="font-size: 32px; transform: rotate(45deg) translateX(32px) translateY(-32px);">arrow_back</span>
+<span class="material-symbols-outlined text-white/10 absolute top-1/2 right-0 translate-x-1/2 -translate-y-1/2" style="font-size: 32px; transform: rotate(-135deg) translateX(32px) translateY(-32px);">arrow_back</span>
+</div>
+</div>
+<!-- Player Areas Layout -->
+<div class="relative w-full aspect-square max-w-sm">
+<!-- Player North (Player 3) -->
+<div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4/5">
+<p class="text-white/60 text-sm font-normal leading-normal text-center mb-2">Player 3</p>
+<div class="grid grid-cols-4 gap-2">
+<div class="w-full bg-white/5 aspect-[3/4] rounded-lg border border-white/10"></div>
+<div class="w-full bg-white/5 aspect-[3/4] rounded-lg border border-white/10"></div>
+<div class="w-full bg-white/5 aspect-[3/4] rounded-lg border border-white/10"></div>
+<div class="w-full bg-white/5 aspect-[3/4] rounded-lg border border-white/10"></div>
+</div>
+</div>
+<!-- Player West (Player 2) -->
+<div class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-4/5 rotate-90">
+<p class="text-white/60 text-sm font-normal leading-normal text-center mb-2 rotate-[-90deg]">Player 2</p>
+<div class="grid grid-cols-4 gap-2">
+<div class="w-full bg-white/5 aspect-[3/4] rounded-lg border border-white/10"></div>
+<div class="w-full bg-white/5 aspect-[3/4] rounded-lg border border-white/10"></div>
+<div class="w-full bg-white/5 aspect-[3/4] rounded-lg border border-white/10"></div>
+<div class="w-full bg-white/5 aspect-[3/4] rounded-lg border border-white/10"></div>
+</div>
+</div>
+<!-- Player East (Player 4) -->
+<div class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-4/5 -rotate-90">
+<p class="text-white/60 text-sm font-normal leading-normal text-center mb-2 rotate-[90deg]">Player 4</p>
+<div class="grid grid-cols-4 gap-2">
+<div class="w-full bg-white/5 aspect-[3/4] rounded-lg border border-white/10"></div>
+<div class="w-full bg-white/5 aspect-[3/4] rounded-lg border border-white/10"></div>
+<div class="w-full bg-white/5 aspect-[3/4] rounded-lg border border-white/10"></div>
+<div class="w-full bg-white/5 aspect-[3/4] rounded-lg border border-white/10"></div>
+</div>
+</div>
+<!-- Player South (You) -->
+<div class="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-full p-2 rounded-xl bg-primary/20 border-2 border-primary shadow-lg shadow-primary/20">
+<p class="text-white text-base font-bold leading-normal text-center mb-3">You</p>
+<div class="grid grid-cols-4 gap-2 px-2">
+<!-- Card 1 -->
+<div class="flex flex-col gap-3 cursor-pointer">
+<div class="relative w-full bg-ruby-red aspect-[3/4] rounded-lg flex items-center justify-center p-2 text-center border-2 border-transparent hover:border-white transition-all">
+<span class="font-bold text-white text-sm sm:text-base leading-tight">CHRONOS</span>
+</div>
+</div>
+<!-- Card 2 (Selected) -->
+<div class="flex flex-col gap-3 cursor-pointer">
+<div class="relative w-full bg-sapphire-blue aspect-[3/4] rounded-lg flex items-center justify-center p-2 text-center border-2 border-white ring-2 ring-white shadow-lg shadow-white/30 transform scale-105 transition-all">
+<span class="font-bold text-white text-sm sm:text-base leading-tight">AETHER</span>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="flex flex-col gap-3 cursor-pointer">
+<div class="relative w-full bg-ruby-red aspect-[3/4] rounded-lg flex items-center justify-center p-2 text-center border-2 border-transparent hover:border-white transition-all">
+<span class="font-bold text-white text-sm sm:text-base leading-tight">CHRONOS</span>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="flex flex-col gap-3 cursor-pointer">
+<div class="relative w-full bg-emerald-green aspect-[3/4] rounded-lg flex items-center justify-center p-2 text-center border-2 border-transparent hover:border-white transition-all">
+<span class="font-bold text-white text-sm sm:text-base leading-tight">TERRA</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Action Button -->
+<div class="w-full pt-4 pb-2">
+<button class="w-full flex items-center justify-center rounded-xl h-14 bg-primary text-white gap-2 text-lg font-bold leading-normal tracking-[0.015em] shadow-lg shadow-primary/30">
+<span>Pass Selected Card</span>
+<span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+</body></html>
