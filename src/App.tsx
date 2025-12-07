@@ -1278,18 +1278,50 @@ const App: React.FC = () => {
 
         <main className="flex-1 flex-grow flex-col items-center justify-center p-4 relative z-10">
           {gameState.phase === GamePhase.ASSIGN_ROLES && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-50">
-              <div className="relative size-20 mb-6">
-                <div className="absolute inset-0 border-4 border-white/20 rounded-xl rotate-0 animate-spin"></div>
-                <div className="absolute inset-0 border-4 border-white/40 rounded-xl rotate-45 animate-spin" style={{ animationDuration: '1.5s' }}></div>
-                <div className="absolute inset-0 border-4 border-primary rounded-xl -rotate-12 animate-spin" style={{ animationDuration: '2s' }}></div>
-              </div>
-              <p className="text-white text-2xl font-bold animate-pulse">
-                {gameState.gameId === GameId.COLOR_WAR ? "Preparing Grid..." : 
-                 gameState.gameId === GameId.TIC_TAC_TOE ? "Drawing Board..." : 
-                 gameState.gameId === GameId.SLIDING_PUZZLE ? "Shuffling Tiles..." : 
-                 "Shuffling Roles..."}
-              </p>
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-game-bg/90 backdrop-blur-sm z-50">
+              {gameState.gameId === GameId.THIEF_POLICE ? (
+                <>
+                  <div className="grid grid-cols-2 gap-6 w-full max-w-sm aspect-square mb-8">
+                    {[0, 1, 2, 3].map((i) => (
+                      <div 
+                        key={i}
+                        className="animate-spin-fade flex items-center justify-center rounded-xl bg-paper/50 shadow-xl backdrop-blur-sm border border-white/10"
+                        style={{ 
+                          animationDelay: `${i * 0.15}s`,
+                          height: '100%'
+                        }}
+                      >
+                        <span className="material-symbols-outlined text-4xl text-paper-text/30">help</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-3 animate-fade-in-up">
+                    <span className="material-symbols-outlined text-3xl text-primary animate-bounce">shuffle</span>
+                    <p className="text-white text-2xl font-bold animate-pulse">Shuffling Roles...</p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="relative size-24 mb-6">
+                    <div className="absolute inset-0 border-4 border-white/20 rounded-xl rotate-0 animate-spin"></div>
+                    <div className="absolute inset-0 border-4 border-white/40 rounded-xl rotate-45 animate-spin" style={{ animationDuration: '1.5s' }}></div>
+                    <div className="absolute inset-0 border-4 border-primary rounded-xl -rotate-12 animate-spin" style={{ animationDuration: '2s' }}></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-4xl text-primary">
+                        {gameState.gameId === GameId.COLOR_WAR ? 'palette' : 
+                         gameState.gameId === GameId.TIC_TAC_TOE ? 'grid_3x3' : 
+                         gameState.gameId === GameId.SLIDING_PUZZLE ? 'apps' : 'casino'}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-white text-2xl font-bold animate-pulse">
+                    {gameState.gameId === GameId.COLOR_WAR ? "Preparing Grid..." : 
+                     gameState.gameId === GameId.TIC_TAC_TOE ? "Drawing Board..." : 
+                     gameState.gameId === GameId.SLIDING_PUZZLE ? "Shuffling Tiles..." : 
+                     "Preparing Game..."}
+                  </p>
+                </>
+              )}
             </div>
           )}
 
@@ -1596,36 +1628,84 @@ const App: React.FC = () => {
 
         {gameState.phase === GamePhase.ROUND_RESULTS && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm z-40 p-4">
-            <div className="bg-paper/10 border border-white/20 rounded-xl w-full max-w-md p-6 text-center shadow-2xl flex flex-col items-center gap-6">
-              <h3 className="text-white text-3xl font-bold">Round Over!</h3>
+            <div className="animate-pop-in bg-paper/10 border border-white/20 rounded-2xl w-full max-w-md p-6 text-center shadow-2xl flex flex-col items-center gap-6">
+              <div className="flex items-center gap-3 animate-fade-in-up">
+                <span className="material-symbols-outlined text-4xl text-cta-green">flag</span>
+                <h3 className="text-white text-3xl font-bold">Round Over!</h3>
+              </div>
+              <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
               <div className="w-full space-y-3 text-left">
                 {gameState.players.map((player, index) => {
                   const isOwner = player.currentRole === 'Owner';
                   const isPolice = player.currentRole === 'Police';
+                  const isRobber = player.currentRole === 'Robber';
+                  const isThief = player.currentRole === 'Thief';
                   const wasAccused = gameState.policeSelection === index;
                   
                   let bgClass = 'bg-white/10';
                   let borderClass = '';
-                  if (isOwner) { bgClass = 'bg-role-owner/30'; borderClass = 'border-2 border-role-owner'; }
-                  else if (isPolice) { bgClass = 'bg-role-police/30'; }
-                  else if (wasAccused) { bgClass = 'bg-alert-red/30'; borderClass = 'border-2 border-alert-red'; }
+                  let roleIcon = 'person';
+                  
+                  if (isOwner) { 
+                    bgClass = 'bg-role-owner/30'; 
+                    borderClass = 'border-2 border-role-owner shadow-[0_0_15px_rgba(241,196,15,0.3)]'; 
+                    roleIcon = 'home';
+                  } else if (isPolice) { 
+                    bgClass = 'bg-role-police/30'; 
+                    borderClass = 'border border-role-police/50';
+                    roleIcon = 'local_police';
+                  } else if (isRobber) { 
+                    bgClass = wasAccused ? 'bg-alert-red/30' : 'bg-role-robber/30'; 
+                    borderClass = wasAccused ? 'border-2 border-alert-red' : 'border border-role-robber/50';
+                    roleIcon = 'sports_martial_arts';
+                  } else if (isThief) { 
+                    bgClass = wasAccused ? 'bg-alert-red/30' : 'bg-role-thief/30'; 
+                    borderClass = wasAccused ? 'border-2 border-alert-red' : 'border border-role-thief/50';
+                    roleIcon = 'visibility_off';
+                  } else if (wasAccused) { 
+                    bgClass = 'bg-alert-red/30'; 
+                    borderClass = 'border-2 border-alert-red'; 
+                  }
                   
                   return (
-                    <div key={player.id} className={`flex items-center justify-between ${bgClass} ${borderClass} p-3 rounded-lg`}>
-                      <div>
-                        <p className="text-white font-bold">{player.name} (Player {player.id})</p>
-                        <p className="text-white/70 text-sm">{player.currentRole}{wasAccused ? ' (Accused)' : ''}</p>
+                    <div 
+                      key={player.id} 
+                      className={`flex items-center justify-between ${bgClass} ${borderClass} p-3 rounded-xl animate-fade-in-up transition-all hover:scale-[1.02]`}
+                      style={{ animationDelay: `${0.1 + index * 0.1}s`, opacity: 0 }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div 
+                          className="size-10 rounded-full flex items-center justify-center shadow-lg"
+                          style={{ backgroundColor: player.color }}
+                        >
+                          <span className="material-symbols-outlined text-lg text-white">{roleIcon}</span>
+                        </div>
+                        <div>
+                          <p className="text-white font-bold">{player.name} <span className="text-white/50 font-normal">(P{player.id})</span></p>
+                          <p className="text-white/70 text-sm font-medium">{player.currentRole}{wasAccused ? ' • Accused' : ''}</p>
+                        </div>
                       </div>
-                      <p className={`text-lg font-semibold ${player.roundPoints > 0 ? 'text-cta-green' : player.roundPoints < 0 ? 'text-alert-red' : 'text-white'}`}>
-                        {player.roundPoints > 0 ? '+' : ''}{player.roundPoints} pts
-                      </p>
+                      <div className={`text-xl font-bold px-3 py-1 rounded-lg ${
+                        player.roundPoints > 0 
+                          ? 'text-cta-green bg-cta-green/20' 
+                          : player.roundPoints < 0 
+                            ? 'text-alert-red bg-alert-red/20' 
+                            : 'text-white/70 bg-white/5'
+                      }`}>
+                        {player.roundPoints > 0 ? '+' : ''}{player.roundPoints}
+                      </div>
                     </div>
                   );
                 })}
               </div>
             </div>
-            <button onClick={handleNextRound} className="mt-8 bg-cta-green text-white font-bold py-4 px-8 rounded-full text-lg shadow-lg w-full max-w-md active:scale-95 transition-transform">
-              {gameState.currentRound >= gameState.maxRounds ? 'View Final Results' : 'Next Round'}
+            <button 
+              onClick={handleNextRound} 
+              className="animate-fade-in-up mt-8 bg-cta-green text-white font-bold py-4 px-8 rounded-full text-lg shadow-lg shadow-cta-green/30 w-full max-w-md active:scale-95 transition-all hover:shadow-xl hover:shadow-cta-green/40 flex items-center justify-center gap-2"
+              style={{ animationDelay: '0.5s', opacity: 0 }}
+            >
+              <span>{gameState.currentRound >= gameState.maxRounds ? 'View Final Results' : 'Next Round'}</span>
+              <span className="material-symbols-outlined">{gameState.currentRound >= gameState.maxRounds ? 'emoji_events' : 'arrow_forward'}</span>
             </button>
           </div>
         )}
