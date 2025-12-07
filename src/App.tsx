@@ -3,6 +3,15 @@ import { GamePhase, Player, GameState, GameId } from './types';
 import { INITIAL_PLAYERS, MAX_ROUNDS, GAMES, ROTATIONS, PLAYER_DIRECTIONS, CONFETTI_COLORS, CONFETTI_SHAPES } from './constants';
 import redSuitBackground from '@assets/generated_images/red_suited_guard_figure.png';
 import QuadMatchRoyale from './QuadMatchRoyale';
+import {
+  ModeSelectionScreen,
+  MultiplayerOptionsScreen,
+  HostGameScreen,
+  JoinGameScreen,
+  BrowseGamesScreen,
+  GameLobbyScreen,
+  useWebSocket,
+} from './multiplayer';
 
 const BGM_URL = "https://cdn.pixabay.com/download/audio/2022/11/22/audio_febc508520.mp3?filename=fun-life-112188.mp3";
 const START_SFX_URL = "https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3";
@@ -591,6 +600,21 @@ const App: React.FC = () => {
   const bgmRef = useRef<HTMLAudioElement | null>(null);
   const [isTaskRevealed, setIsTaskRevealed] = useState(false);
   const timerIntervalRef = useRef<number | null>(null);
+  const [isMultiplayerMode, setIsMultiplayerMode] = useState(false);
+
+  const {
+    state: multiplayerState,
+    publicRooms,
+    createRoom,
+    joinRoom,
+    leaveRoom,
+    getPublicRooms,
+    toggleReady,
+    startGame: wsStartGame,
+    updateSettings,
+    setMode: setMultiplayerMode,
+    setOption: setMultiplayerOption,
+  } = useWebSocket();
 
   const currentGame = GAMES[gameState.gameId];
 
@@ -637,10 +661,85 @@ const App: React.FC = () => {
   }, [gameState.gameId, gameState.phase, gameState.puzzleStatus]);
 
   const handleSelectGame = (id: GameId) => {
-    setGameState(prev => ({ ...prev, gameId: id, phase: GamePhase.SETUP }));
+    setGameState(prev => ({ ...prev, gameId: id, phase: GamePhase.MODE_SELECT }));
   };
 
+  const handleSelectOffline = () => {
+    setIsMultiplayerMode(false);
+    setGameState(prev => ({ ...prev, phase: GamePhase.SETUP }));
+  };
+
+  const handleSelectOnline = () => {
+    setIsMultiplayerMode(true);
+    setMultiplayerMode('online');
+    setGameState(prev => ({ ...prev, phase: GamePhase.MULTIPLAYER_OPTIONS }));
+  };
+
+  const handleHostGame = () => {
+    setGameState(prev => ({ ...prev, phase: GamePhase.HOST_GAME }));
+  };
+
+  const handleJoinGame = () => {
+    setGameState(prev => ({ ...prev, phase: GamePhase.JOIN_GAME }));
+  };
+
+  const handleBrowseGames = () => {
+    setGameState(prev => ({ ...prev, phase: GamePhase.BROWSE_GAMES }));
+    getPublicRooms();
+  };
+
+  const handleCreateGame = (settings: { playerName: string; isPublic: boolean; aiCount: number; gameMode: string; deckTheme: string }) => {
+    createRoom(settings.playerName, settings.isPublic, settings.aiCount, settings.gameMode, settings.deckTheme);
+  };
+
+  const handleJoinRoom = (playerName: string, roomCode: string) => {
+    joinRoom(playerName, roomCode);
+  };
+
+  const handleJoinRoomById = (playerName: string, roomId: string) => {
+    joinRoom(playerName, undefined, roomId);
+  };
+
+  const handleLeaveRoom = () => {
+    leaveRoom();
+    setGameState(prev => ({ ...prev, phase: GamePhase.MULTIPLAYER_OPTIONS }));
+  };
+
+  const handleMultiplayerStartGame = () => {
+    wsStartGame();
+  };
+
+  useEffect(() => {
+    if (multiplayerState.room) {
+      if (gameState.phase !== GamePhase.GAME_LOBBY && multiplayerState.room.status === 'waiting') {
+        setGameState(prev => ({ ...prev, phase: GamePhase.GAME_LOBBY }));
+      }
+      if (multiplayerState.room.status === 'playing' && gameState.phase === GamePhase.GAME_LOBBY) {
+        const roomPlayers = multiplayerState.room.players;
+        const newPlayers = INITIAL_PLAYERS.slice(0, 4).map((p, i) => {
+          const roomPlayer = roomPlayers[i];
+          const isAi = !roomPlayer && i < roomPlayers.length + multiplayerState.room!.aiCount;
+          return {
+            ...p,
+            name: roomPlayer?.name || (isAi ? `Bot ${i + 1}` : `Player ${i + 1}`),
+            isAi: isAi,
+          };
+        });
+        setGameState(prev => ({
+          ...prev,
+          players: newPlayers,
+          phase: GamePhase.ASSIGN_ROLES,
+          currentRound: 1,
+        }));
+      }
+    }
+  }, [multiplayerState.room, gameState.phase]);
+
   const handleGoHome = () => {
+    if (isMultiplayerMode) {
+      leaveRoom();
+      setIsMultiplayerMode(false);
+    }
     setGameState({
       gameId: GameId.THIEF_POLICE,
       players: JSON.parse(JSON.stringify(INITIAL_PLAYERS)),
@@ -1250,6 +1349,78 @@ const App: React.FC = () => {
   const renderContent = () => {
     if (gameState.phase === GamePhase.HOME) {
       return <HomeScreen onSelectGame={handleSelectGame} />;
+    }
+
+    if (gameState.phase === GamePhase.MODE_SELECT) {
+      return (
+        <ModeSelectionScreen
+          gameName={currentGame.title}
+          onSelectOffline={handleSelectOffline}
+          onSelectOnline={handleSelectOnline}
+          onBack={handleGoHome}
+        />
+      );
+    }
+
+    if (gameState.phase === GamePhase.MULTIPLAYER_OPTIONS) {
+      return (
+        <MultiplayerOptionsScreen
+          onSelectHost={handleHostGame}
+          onSelectJoin={handleJoinGame}
+          onSelectBrowse={handleBrowseGames}
+          onBack={() => setGameState(prev => ({ ...prev, phase: GamePhase.MODE_SELECT }))}
+        />
+      );
+    }
+
+    if (gameState.phase === GamePhase.HOST_GAME) {
+      return (
+        <HostGameScreen
+          onCreateGame={handleCreateGame}
+          onBack={() => setGameState(prev => ({ ...prev, phase: GamePhase.MULTIPLAYER_OPTIONS }))}
+          isConnected={multiplayerState.isConnected}
+          error={multiplayerState.error}
+        />
+      );
+    }
+
+    if (gameState.phase === GamePhase.JOIN_GAME) {
+      return (
+        <JoinGameScreen
+          onJoinGame={handleJoinRoom}
+          onBrowseGames={handleBrowseGames}
+          onBack={() => setGameState(prev => ({ ...prev, phase: GamePhase.MULTIPLAYER_OPTIONS }))}
+          isConnected={multiplayerState.isConnected}
+          error={multiplayerState.error}
+        />
+      );
+    }
+
+    if (gameState.phase === GamePhase.BROWSE_GAMES) {
+      return (
+        <BrowseGamesScreen
+          rooms={publicRooms}
+          onRefresh={getPublicRooms}
+          onJoinRoom={handleJoinRoomById}
+          onBack={() => setGameState(prev => ({ ...prev, phase: GamePhase.MULTIPLAYER_OPTIONS }))}
+          isConnected={multiplayerState.isConnected}
+          error={multiplayerState.error}
+        />
+      );
+    }
+
+    if (gameState.phase === GamePhase.GAME_LOBBY && multiplayerState.room) {
+      return (
+        <GameLobbyScreen
+          room={multiplayerState.room}
+          playerId={multiplayerState.playerId || ''}
+          onToggleReady={toggleReady}
+          onStartGame={handleMultiplayerStartGame}
+          onLeaveRoom={handleLeaveRoom}
+          onUpdateSettings={updateSettings}
+          error={multiplayerState.error}
+        />
+      );
     }
     
     if (gameState.phase === GamePhase.SETUP) {

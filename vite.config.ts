@@ -9,7 +9,14 @@ export default defineConfig({
     hmr: {
       clientPort: 443,
     },
-    allowedHosts: true
+    allowedHosts: true,
+    proxy: {
+      '/ws': {
+        target: 'ws://localhost:3001',
+        ws: true,
+        changeOrigin: true,
+      },
+    },
   },
   plugins: [react()],
   resolve: {

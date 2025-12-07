@@ -40,6 +40,10 @@ author = "agent"
 task = "workflow.run"
 args = "Game Dev Server"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Game Server"
+
 [[workflows.workflow]]
 name = "Game Dev Server"
 author = "agent"
@@ -52,6 +56,22 @@ task = "shell.exec"
 args = "./node_modules/.bin/vite"
 waitForPort = 5000
 
+[[workflows.workflow]]
+name = "Game Server"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "bun run server/index.ts"
+waitForPort = 3001
+
+[[ports]]
+localPort = 3001
+externalPort = 3001
+
 [[ports]]
 localPort = 5000
 externalPort = 80
@@ -59,6 +79,10 @@ externalPort = 80
 [[ports]]
 localPort = 34663
 externalPort = 3002
+
+[[ports]]
+localPort = 35513
+externalPort = 4200
 
 [[ports]]
 localPort = 36781
