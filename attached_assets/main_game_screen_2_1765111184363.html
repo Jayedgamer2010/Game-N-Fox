@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Main Game Screen</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#1e94f6",
+              "background-light": "#f5f7f8",
+              "background-dark": "#101a22",
+              "game-bg": "#2C3E50",
+              "paper": "#F5F5DC",
+              "paper-text": "#34495E",
+              "role-owner": "#F1C40F",
+              "role-police": "#3498DB",
+              "cta-green": "#2ECC71",
+              "alert-red": "#E74C3C"
+            },
+            fontFamily: {
+              "display": ["Plus Jakarta Sans", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings:
+        'FILL' 1,
+        'wght' 400,
+        'GRAD' 0,
+        'opsz' 24
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display">
+<div class="relative flex h-auto min-h-screen w-full flex-col bg-game-bg dark group/design-root overflow-hidden">
+<!-- Main Game Area -->
+<main class="flex flex-grow flex-col items-center justify-center p-4">
+<!-- Top App Bar -->
+<div class="absolute top-0 left-0 right-0 flex items-center bg-transparent p-4 pb-2 justify-between z-10">
+<div class="flex size-10 shrink-0 items-center justify-center text-white">
+<span class="material-symbols-outlined text-3xl">settings</span>
+</div>
+<h2 class="text-white text-xl font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-10">Round 1</h2>
+</div>
+<!-- Player Cards Grid -->
+<div class="grid grid-cols-2 gap-4 w-full max-w-sm aspect-square">
+<!-- Player 1 (Top Left) -->
+<div class="relative flex flex-col items-center justify-center rounded-xl shadow-lg bg-paper p-4 transform -rotate-6">
+<p class="text-paper-text text-lg font-bold leading-tight tracking-[-0.015em]">Player 1</p>
+<p class="text-paper-text/70 text-base font-normal leading-normal">Jessica</p>
+</div>
+<!-- Player 2 (Top Right) -->
+<div class="relative flex flex-col items-center justify-center rounded-xl shadow-lg bg-role-owner p-4 transform rotate-3">
+<p class="text-paper-text text-lg font-bold leading-tight tracking-[-0.015em]">Player 2</p>
+<p class="text-paper-text text-xl font-extrabold leading-normal mt-1">OWNER</p>
+</div>
+<!-- Player 3 (Bottom Left) -->
+<div class="relative flex flex-col items-center justify-center rounded-xl shadow-lg bg-paper p-4 transform rotate-4">
+<p class="text-paper-text text-lg font-bold leading-tight tracking-[-0.015em]">Player 3</p>
+<p class="text-paper-text/70 text-base font-normal leading-normal">Michael</p>
+</div>
+<!-- Player 4 (Bottom Right) -->
+<div class="relative flex flex-col items-center justify-center rounded-xl shadow-lg bg-role-police p-4 transform -rotate-2">
+<p class="text-white text-lg font-bold leading-tight tracking-[-0.015em]">Player 4</p>
+<p class="text-white text-xl font-extrabold leading-normal mt-1">POLICE</p>
+</div>
+</div>
+<!-- Central Status Text (Example for role assignment phase) -->
+<!-- <div class="absolute inset-0 flex items-center justify-center bg-game-bg/80 backdrop-blur-sm z-20">
+                <p class="text-white text-2xl font-bold animate-pulse">Assigning roles...</p>
+            </div> -->
+<!-- Police Task Modal (Example) -->
+<!-- <div class="absolute inset-0 flex items-center justify-center bg-black/60 z-30 p-6">
+                <div class="bg-paper rounded-xl w-full max-w-sm p-6 text-center shadow-2xl flex flex-col items-center gap-4">
+                    <h3 class="text-paper-text text-2xl font-bold">Police Investigation</h3>
+                    <p class="text-paper-text/80">As the Police, you must identify the Owner.</p>
+                    <p class="text-paper-text/80 font-semibold">Tap on a player to accuse them.</p>
+                    <button class="mt-4 bg-role-police text-white font-bold py-3 px-6 rounded-lg w-full">
+                        Got it
+                    </button>
+                </div>
+            </div> -->
+<!-- Final Score Reveal Overlay -->
+<div class="absolute inset-0 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm z-40 p-4">
+<div class="bg-paper/10 border border-white/20 rounded-xl w-full max-w-md p-6 text-center shadow-2xl flex flex-col items-center gap-6">
+<h3 class="text-white text-3xl font-bold">Round Over!</h3>
+<div class="w-full space-y-3 text-left">
+<!-- Player 1 Result -->
+<div class="flex items-center justify-between bg-white/10 p-3 rounded-lg">
+<div>
+<p class="text-white font-bold">Jessica (Player 1)</p>
+<p class="text-white/70 text-sm">Citizen</p>
+</div>
+<p class="text-white text-lg font-semibold">+0 pts</p>
+</div>
+<!-- Player 2 Result -->
+<div class="flex items-center justify-between bg-role-owner/30 p-3 rounded-lg border-2 border-role-owner">
+<div>
+<p class="text-white font-bold">You (Player 2)</p>
+<p class="text-white/90 text-sm font-semibold">Owner</p>
+</div>
+<p class="text-white text-lg font-semibold">+10 pts</p>
+</div>
+<!-- Player 3 Result -->
+<div class="flex items-center justify-between bg-alert-red/30 p-3 rounded-lg border-2 border-alert-red">
+<div>
+<p class="text-white font-bold">Michael (Player 3)</p>
+<p class="text-white/70 text-sm">Citizen (Accused)</p>
+</div>
+<p class="text-white text-lg font-semibold">-5 pts</p>
+</div>
+<!-- Player 4 Result -->
+<div class="flex items-center justify-between bg-role-police/30 p-3 rounded-lg">
+<div>
+<p class="text-white font-bold">David (Player 4)</p>
+<p class="text-white/90 text-sm font-semibold">Police</p>
+</div>
+<p class="text-white text-lg font-semibold">-5 pts</p>
+</div>
+</div>
+</div>
+<button class="mt-8 bg-cta-green text-white font-bold py-4 px-8 rounded-full text-lg shadow-lg w-full max-w-md">
+                    Next Round
+                </button>
+</div>
+</main>
+<!-- Bottom Navigation/CTA Area (Kept empty as main CTA is on the overlay) -->
+<footer class="p-4"></footer>
+</div>
+</body></html>

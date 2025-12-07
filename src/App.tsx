@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { GamePhase, Player, GameState, GameId } from './types';
-import { INITIAL_PLAYERS, MAX_ROUNDS, GAMES, ROTATIONS } from './constants';
+import { INITIAL_PLAYERS, MAX_ROUNDS, GAMES, ROTATIONS, PLAYER_DIRECTIONS, CONFETTI_COLORS, CONFETTI_SHAPES } from './constants';
 
 const BGM_URL = "https://cdn.pixabay.com/download/audio/2022/11/22/audio_febc508520.mp3?filename=fun-life-112188.mp3";
 const START_SFX_URL = "https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3";
@@ -156,40 +156,65 @@ const TutorialOverlay: React.FC<{ gameId: GameId; onDismiss: () => void }> = ({ 
 const HomeScreen: React.FC<{ onSelectGame: (id: GameId) => void }> = ({ onSelectGame }) => {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background-dark p-6">
-      <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">Party Games</h1>
-      <p className="text-zinc-400 mb-8">Select a game to play</p>
+      <div className="animate-fade-in-up text-center mb-8">
+        <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-blue-600 mb-4 shadow-lg shadow-primary/30 animate-float">
+          <span className="material-symbols-outlined text-5xl text-white">sports_esports</span>
+        </div>
+        <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">Party Games</h1>
+        <p className="text-zinc-400">Select a game to play</p>
+      </div>
       <div className="grid grid-cols-1 gap-4 w-full max-w-md">
-        {Object.values(GAMES).map((game) => (
+        {Object.values(GAMES).map((game, index) => (
           <button
             key={game.id}
             onClick={() => !game.isComingSoon && onSelectGame(game.id)}
             disabled={game.isComingSoon}
-            className={`relative overflow-hidden rounded-xl p-4 text-left transition-all ${
+            className={`relative overflow-hidden rounded-xl p-5 text-left transition-all duration-300 animate-fade-in-up group ${
               game.isComingSoon 
-                ? 'opacity-50 cursor-not-allowed bg-zinc-800' 
-                : 'bg-zinc-800 hover:bg-zinc-700 active:scale-[0.98]'
+                ? 'opacity-50 cursor-not-allowed bg-zinc-800/50' 
+                : 'bg-zinc-800/80 hover:bg-zinc-700/80 active:scale-[0.98] hover:shadow-lg hover:-translate-y-1'
             }`}
+            style={{ animationDelay: `${0.1 + index * 0.08}s`, opacity: 0 }}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/20"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-black/30"></div>
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-xl font-bold text-white">{game.title}</h3>
+                <div className="flex items-center gap-3">
+                  <div 
+                    className="w-10 h-10 rounded-lg flex items-center justify-center shadow-lg transition-transform group-hover:scale-110"
+                    style={{ backgroundColor: game.themeColor }}
+                  >
+                    <span className="material-symbols-outlined text-white text-xl">
+                      {game.id === GameId.THIEF_POLICE ? 'local_police' : 
+                       game.id === GameId.COLOR_WAR ? 'palette' :
+                       game.id === GameId.TIC_TAC_TOE ? 'grid_3x3' :
+                       game.id === GameId.SLIDING_PUZZLE ? 'apps' :
+                       game.id === GameId.SPACE_RACE ? 'rocket_launch' : 'castle'}
+                    </span>
+                  </div>
+                  <h3 className="text-xl font-bold text-white">{game.title}</h3>
+                </div>
                 {game.isComingSoon && (
-                  <span className="text-xs bg-zinc-600 px-2 py-1 rounded-full text-zinc-300">Coming Soon</span>
+                  <span className="text-xs bg-zinc-600/80 px-2.5 py-1 rounded-full text-zinc-300 backdrop-blur-sm">Coming Soon</span>
                 )}
               </div>
-              <p className="text-zinc-400 text-sm">{game.description}</p>
-              <div className="flex items-center gap-2 mt-3 text-xs text-zinc-500">
-                <span className="material-symbols-outlined text-sm">group</span>
-                <span>{game.playerCount} Player{game.playerCount > 1 ? 's' : ''}</span>
+              <p className="text-zinc-400 text-sm ml-13 pl-13">{game.description}</p>
+              <div className="flex items-center gap-4 mt-3 ml-13">
+                <div className="flex items-center gap-1.5 text-xs text-zinc-500">
+                  <span className="material-symbols-outlined text-sm">group</span>
+                  <span>{game.playerCount} Player{game.playerCount > 1 ? 's' : ''}</span>
+                </div>
+                {!game.isComingSoon && (
+                  <div className="flex items-center gap-1.5 text-xs text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span>Play Now</span>
+                    <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                  </div>
+                )}
               </div>
             </div>
             <div 
-              className="absolute top-0 right-0 w-20 h-full opacity-30"
-              style={{ 
-                backgroundColor: game.themeColor,
-                filter: 'blur(40px)'
-              }}
+              className="absolute -top-10 -right-10 w-32 h-32 opacity-20 blur-2xl transition-all group-hover:opacity-40 group-hover:scale-125"
+              style={{ backgroundColor: game.themeColor }}
             ></div>
           </button>
         ))}
@@ -219,95 +244,181 @@ const SetupScreen: React.FC<{ gameName: string; gameId: GameId; onStart: (names:
   const playerLabels = isSolo 
     ? ['PLAYER'] 
     : isTwoPlayer 
-      ? ['PLAYER 1', 'PLAYER 2']
-      : ['PLAYER 1', 'PLAYER 2', 'PLAYER 3', 'PLAYER 4'];
+      ? ['PLAYER X', 'PLAYER O']
+      : PLAYER_DIRECTIONS;
 
   return (
     <div className="flex flex-col min-h-screen bg-background-dark">
-      <div className="flex items-center p-4 pb-2 justify-between sticky top-0 z-10 bg-background-dark">
-        <button onClick={onBack} className="flex size-12 shrink-0 items-center justify-start text-white">
+      <div className="flex items-center p-4 pb-2 justify-between sticky top-0 z-10 bg-background-dark/95 backdrop-blur-sm">
+        <button onClick={onBack} className="flex size-12 shrink-0 items-center justify-center text-white hover:bg-white/10 rounded-full transition-colors">
           <span className="material-symbols-outlined text-2xl">arrow_back_ios_new</span>
         </button>
-        <h2 className="text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-12">Setup</h2>
+        <h2 className="text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-12">Game Setup</h2>
       </div>
       <main className="flex-grow px-4">
-        <p className="text-primary text-sm font-bold uppercase tracking-wider pt-6">{gameName}</p>
-        <h1 className="text-white text-[32px] font-bold leading-tight tracking-tight pb-2">Enter Names</h1>
-        <p className="text-zinc-400 text-base pb-8">
-          {isSolo 
-            ? 'Enter your name to begin.' 
-            : `Enter player names to begin.`}
-        </p>
-        <div className="flex flex-col gap-4">
-          {INITIAL_PLAYERS.slice(0, playerCount).map((player, index) => (
-            <div key={player.id} className="flex items-center gap-4 bg-zinc-800/40 p-4 rounded-lg">
-              <div className="flex items-center gap-4 flex-1">
-                <div 
-                  className="flex items-center justify-center rounded-full shrink-0 size-8"
-                  style={{ backgroundColor: player.color }}
-                ></div>
-                <p className="text-white text-base font-medium leading-normal w-20">
-                  {playerLabels[index]}
-                </p>
-                <input
-                  className="flex-1 bg-transparent text-white placeholder:text-zinc-400 border-0 p-0 focus:ring-0 text-right outline-none"
-                  placeholder={isSolo ? 'Name' : (aiEnabled && index >= playerCount - (isTwoPlayer ? 1 : aiCount) ? `Bot ${index + 1}` : 'Name')}
-                  value={names[index]}
-                  onChange={(e) => handleNameChange(index, e.target.value)}
-                  type="text"
-                />
+        <div className="animate-fade-in-up">
+          <h1 className="text-white text-[32px] font-bold leading-tight tracking-tight pt-6 pb-2">Enter Player Names</h1>
+          <p className="text-zinc-400 text-base pb-6">
+            {isSolo 
+              ? 'Enter your name to begin.' 
+              : `Enter player names to begin.`}
+          </p>
+        </div>
+        <div className="flex flex-col gap-3">
+          {INITIAL_PLAYERS.slice(0, playerCount).map((player, index) => {
+            const isAiPlayer = aiEnabled && index >= playerCount - (isTwoPlayer ? 1 : aiCount);
+            return (
+              <div 
+                key={player.id} 
+                className={`flex items-center gap-4 bg-zinc-800/50 p-4 rounded-xl animate-fade-in-up transition-all duration-300 hover:bg-zinc-800/70 ${isAiPlayer ? 'ring-1 ring-primary/30' : ''}`}
+                style={{ animationDelay: `${0.1 + index * 0.05}s`, opacity: 0 }}
+              >
+                <div className="flex items-center gap-4 flex-1">
+                  <div 
+                    className="flex items-center justify-center rounded-full shrink-0 size-10 shadow-lg transition-transform hover:scale-110"
+                    style={{ backgroundColor: player.color }}
+                  >
+                    {isAiPlayer && <span className="material-symbols-outlined text-white text-sm">smart_toy</span>}
+                  </div>
+                  <p className="text-white text-base font-bold leading-normal w-20 uppercase tracking-wide">
+                    {playerLabels[index]}
+                  </p>
+                  <input
+                    className="flex-1 bg-transparent text-white placeholder:text-zinc-500 border-0 p-0 focus:ring-0 text-right outline-none text-base"
+                    placeholder={isSolo ? 'Your Name' : (isAiPlayer ? `Bot ${index + 1}` : `Player ${index + 1} Name`)}
+                    value={names[index]}
+                    onChange={(e) => handleNameChange(index, e.target.value)}
+                    type="text"
+                    disabled={isAiPlayer}
+                  />
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
         {!isSolo && (
-          <div className="mt-6 p-4 bg-zinc-800/40 rounded-lg">
+          <div className="mt-6 p-4 bg-zinc-800/50 rounded-xl animate-fade-in-up" style={{ animationDelay: '0.3s', opacity: 0 }}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-white font-medium flex items-center gap-2">
-                  <span className="material-symbols-outlined text-lg">smart_toy</span>
+                <p className="text-white font-bold flex items-center gap-2">
+                  <span className="material-symbols-outlined text-xl text-primary">smart_toy</span>
                   AI Mode
                 </p>
-                <p className="text-zinc-400 text-sm">
-                  {isTwoPlayer ? 'Play against computer' : 'Number of AI Players:'}
+                <p className="text-zinc-400 text-sm mt-1">
+                  {isTwoPlayer ? 'Play against computer' : 'Add AI opponents'}
                 </p>
               </div>
               <button 
                 onClick={() => setAiEnabled(!aiEnabled)}
-                className={`w-12 h-6 rounded-full transition-colors ${aiEnabled ? 'bg-primary' : 'bg-zinc-600'}`}
+                className={`w-14 h-7 rounded-full transition-all duration-300 ${aiEnabled ? 'bg-primary shadow-lg shadow-primary/30' : 'bg-zinc-600'}`}
               >
-                <div className={`w-5 h-5 bg-white rounded-full transition-transform ${aiEnabled ? 'translate-x-6' : 'translate-x-0.5'}`}></div>
+                <div className={`w-6 h-6 bg-white rounded-full transition-all duration-300 shadow-md ${aiEnabled ? 'translate-x-7' : 'translate-x-0.5'}`}></div>
               </button>
             </div>
             {aiEnabled && !isTwoPlayer && (
-              <div className="mt-4 flex items-center gap-4">
-                <span className="text-zinc-400 text-sm">Number of AI Players:</span>
-                {[1, 2, 3].map(num => (
-                  <button
-                    key={num}
-                    onClick={() => setAiCount(num)}
-                    className={`px-4 py-2 rounded-lg font-bold text-sm ${aiCount === num ? 'bg-primary text-white' : 'bg-zinc-700 text-zinc-300'}`}
-                  >
-                    {num} Bot{num > 1 ? 's' : ''}
-                  </button>
-                ))}
+              <div className="mt-4 pt-4 border-t border-white/10">
+                <p className="text-zinc-400 text-sm mb-3">Number of AI Players:</p>
+                <div className="flex items-center gap-2">
+                  {[1, 2, 3].map(num => (
+                    <button
+                      key={num}
+                      onClick={() => setAiCount(num)}
+                      className={`flex-1 py-3 rounded-lg font-bold text-sm transition-all duration-200 ${aiCount === num ? 'bg-primary text-white shadow-lg shadow-primary/30 scale-105' : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'}`}
+                    >
+                      {num} Bot{num > 1 ? 's' : ''}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>
         )}
       </main>
-      <div className="p-4 pt-8 sticky bottom-0 bg-gradient-to-t from-background-dark to-transparent">
+      <div className="p-4 pt-8 sticky bottom-0 bg-gradient-to-t from-background-dark via-background-dark/95 to-transparent">
         <button
           onClick={() => onStart(names, { enabled: aiEnabled, count: isTwoPlayer ? 1 : aiCount })}
           disabled={!canStart}
-          className={`w-full h-14 rounded-lg font-bold text-base transition-all ${
+          className={`w-full h-14 rounded-xl font-bold text-base transition-all duration-300 ${
             canStart 
-              ? 'bg-primary text-white active:scale-[0.98]' 
+              ? 'bg-primary text-white active:scale-[0.98] shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40' 
               : 'bg-zinc-800 text-zinc-600 cursor-not-allowed'
           }`}
         >
-          Start Game
+          <span className="flex items-center justify-center gap-2">
+            <span className="material-symbols-outlined">play_arrow</span>
+            Start Game
+          </span>
         </button>
+      </div>
+    </div>
+  );
+};
+
+const ConfettiPiece: React.FC<{ index: number }> = ({ index }) => {
+  const shape = CONFETTI_SHAPES[index % CONFETTI_SHAPES.length];
+  const color = CONFETTI_COLORS[index % CONFETTI_COLORS.length];
+  const left = 5 + (index * 10) % 90;
+  const duration = 4 + Math.random() * 4;
+  const delay = Math.random() * 3;
+  
+  const shapeClass = shape === 'circle' ? 'confetti-circle' : shape === 'triangle' ? 'confetti-triangle' : 'confetti-rectangle';
+  
+  return (
+    <div 
+      className={`confetti ${shapeClass}`}
+      style={{ 
+        left: `${left}%`,
+        backgroundColor: shape !== 'triangle' ? color : 'transparent',
+        borderBottomColor: shape === 'triangle' ? color : undefined,
+        animationDuration: `${duration}s`,
+        animationDelay: `${delay}s`
+      }}
+    />
+  );
+};
+
+const FloatingScoreHeader: React.FC<{ 
+  players: Player[]; 
+  currentRound: number; 
+  maxRounds: number; 
+  activePlayerId?: number;
+  gameTitle: string;
+}> = ({ players, currentRound, maxRounds, activePlayerId, gameTitle }) => {
+  return (
+    <div className="fixed top-0 left-0 right-0 p-3 pt-4 z-30 pointer-events-none">
+      <div className="mx-auto max-w-lg rounded-2xl glass-dark px-4 py-3 shadow-2xl animate-fade-in-up pointer-events-auto">
+        <div className="flex items-center justify-between border-b border-white/10 pb-2 mb-2">
+          <h2 className="text-base font-bold text-white">{gameTitle}</h2>
+          <span className="text-sm text-zinc-400">Round {currentRound}/{maxRounds}</span>
+        </div>
+        <div className="flex justify-between items-center gap-1">
+          {players.map((player, index) => {
+            const isActive = player.id === activePlayerId;
+            return (
+              <div key={player.id} className={`flex flex-1 flex-col items-center gap-1 text-center transition-all duration-300 ${isActive ? 'scale-110' : 'opacity-70'}`}>
+                <div className="relative">
+                  <div 
+                    className={`aspect-square size-10 rounded-full border-2 flex items-center justify-center shadow-lg transition-all ${isActive ? 'border-primary ring-2 ring-primary/50' : 'border-transparent'}`}
+                    style={{ backgroundColor: player.color }}
+                  >
+                    <span className="material-symbols-outlined text-lg text-white">
+                      {player.isAi ? 'smart_toy' : 'person'}
+                    </span>
+                  </div>
+                  {isActive && (
+                    <div className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary ring-2 ring-background-dark">
+                      <span className="material-symbols-outlined text-[10px] text-white">star</span>
+                    </div>
+                  )}
+                </div>
+                <div className={`text-xs font-medium truncate max-w-[60px] ${isActive ? 'text-primary' : 'text-white/70'}`}>
+                  {player.name || `P${index + 1}`}
+                </div>
+                <div className="text-sm font-bold text-white">{player.totalScore}</div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
@@ -319,79 +430,73 @@ const Leaderboard: React.FC<{ players: Player[]; onPlayAgain: () => void; onHome
   return (
     <div className="relative flex h-full min-h-screen w-full flex-col items-center overflow-hidden bg-background-dark">
       <div className="absolute inset-0 z-0 pointer-events-none">
-        {[...Array(9)].map((_, i) => (
-          <div 
-            key={i}
-            className="absolute w-2.5 h-2.5 rounded-full bg-yellow-400 opacity-70"
-            style={{ 
-              left: `${10 + i * 10}%`, 
-              animation: `fall ${4 + Math.random() * 4}s linear infinite`,
-              animationDelay: `${Math.random() * 2}s`
-            }}
-          ></div>
+        {[...Array(18)].map((_, i) => (
+          <ConfettiPiece key={i} index={i} />
         ))}
       </div>
-      <style>{`
-        @keyframes fall {
-          0% { transform: translateY(-10vh) rotate(0deg); }
-          100% { transform: translateY(110vh) rotate(720deg); }
-        }
-      `}</style>
       <div className="relative z-10 flex w-full max-w-md flex-col px-4 pt-16 pb-8">
-        <div className="text-center">
+        <div className="text-center animate-fade-in-up">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 mb-4 shadow-lg animate-float">
+            <span className="material-symbols-outlined text-4xl text-white">emoji_events</span>
+          </div>
           <h1 className="text-3xl font-bold tracking-tight text-white">Final Results</h1>
-          <p className="mt-1 text-base text-zinc-400">Game Complete</p>
+          <p className="mt-1 text-base text-zinc-400">{MAX_ROUNDS} Rounds Complete</p>
         </div>
         <div className="mt-8 flex flex-col gap-3">
           {sortedPlayers.map((player, index) => (
             <div 
               key={player.id}
-              className={`flex items-center gap-4 rounded-xl p-4 ${
+              className={`flex items-center gap-4 rounded-xl p-4 animate-fade-in-up backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] ${
                 index === 0 
-                  ? 'border-2 border-amber-400 bg-amber-400/20 shadow-lg' 
-                  : 'bg-white/5'
+                  ? 'border-2 border-amber-400 bg-amber-400/20 shadow-lg shadow-amber-400/20' 
+                  : 'bg-white/5 hover:bg-white/10'
               }`}
+              style={{ animationDelay: `${0.1 + index * 0.1}s`, opacity: 0 }}
             >
-              <span className={`text-2xl font-bold ${index === 0 ? 'text-amber-500' : 'text-zinc-500'}`}>
+              <span className={`text-2xl font-bold w-8 ${index === 0 ? 'text-amber-500' : index === 1 ? 'text-zinc-300' : index === 2 ? 'text-amber-700' : 'text-zinc-500'}`}>
                 {index + 1}
               </span>
               <div className="flex flex-1 items-center gap-4">
                 <div className="relative">
                   <div 
-                    className="flex h-12 w-12 items-center justify-center rounded-full"
+                    className={`flex h-12 w-12 items-center justify-center rounded-full shadow-lg ${index === 0 ? 'ring-2 ring-amber-400 ring-offset-2 ring-offset-background-dark' : ''}`}
                     style={{ backgroundColor: player.color }}
                   >
-                    <span className="material-symbols-outlined text-2xl text-white">person</span>
+                    <span className="material-symbols-outlined text-2xl text-white">
+                      {player.isAi ? 'smart_toy' : 'person'}
+                    </span>
                   </div>
                   {index === 0 && (
-                    <div className="absolute -top-3 -right-2 text-3xl text-amber-400">
-                      <span className="material-symbols-outlined !text-4xl">workspace_premium</span>
+                    <div className="absolute -top-3 -right-2 animate-wiggle">
+                      <span className="material-symbols-outlined !text-3xl text-amber-400 drop-shadow-lg">workspace_premium</span>
                     </div>
                   )}
                 </div>
                 <div className="flex flex-col justify-center">
                   <p className="text-base font-semibold text-white">{player.name || `Player ${player.id}`}</p>
                   {index === 0 && <p className="text-sm font-medium text-amber-400">Winner!</p>}
+                  {index === 1 && <p className="text-xs text-zinc-400">Runner Up</p>}
                 </div>
               </div>
-              <div className="shrink-0">
-                <p className="text-lg font-bold text-white">{player.totalScore} pts</p>
+              <div className="shrink-0 text-right">
+                <p className={`text-lg font-bold ${index === 0 ? 'text-amber-400' : 'text-white'}`}>{player.totalScore}</p>
+                <p className="text-xs text-zinc-500">pts</p>
               </div>
             </div>
           ))}
         </div>
       </div>
-      <div className="sticky bottom-0 z-20 mt-auto flex w-full max-w-md flex-col gap-3 bg-gradient-to-t from-background-dark to-transparent px-4 pb-8 pt-4">
+      <div className="sticky bottom-0 z-20 mt-auto flex w-full max-w-md flex-col gap-3 bg-gradient-to-t from-background-dark via-background-dark/90 to-transparent px-4 pb-8 pt-8">
         <button 
           onClick={onPlayAgain}
-          className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-base font-bold text-white shadow-lg transition-transform active:scale-95"
+          className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-primary text-base font-bold text-white shadow-lg shadow-primary/30 transition-all active:scale-95 hover:bg-primary/90 hover:shadow-xl"
         >
           <span className="material-symbols-outlined">replay</span>
           Play Again
         </button>
         <button 
           onClick={onHome}
-          className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary/20 text-base font-bold text-primary transition-transform active:scale-95"
+          className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-white/10 text-base font-bold text-white transition-all active:scale-95 hover:bg-white/20"
         >
           <span className="material-symbols-outlined">home</span>
           Back to Menu

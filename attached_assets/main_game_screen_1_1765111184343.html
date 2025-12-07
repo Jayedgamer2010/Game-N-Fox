@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Main Game Screen</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#1e94f6",
+            "background-light": "#f5f7f8",
+            "background-dark": "#101a22",
+            "game-bg": "#2C3E50",
+            "paper": "#F5F5DC",
+            "paper-text": "#34495E",
+            "role-owner": "#F1C40F",
+            "role-police": "#3498DB",
+            "cta-green": "#2ECC71",
+            "alert-red": "#E74C3C"
+          },
+          fontFamily: {
+            "display": ["Plus Jakarta Sans", "sans-serif"]
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          keyframes: {
+            fadeInUp: {
+              '0%': { opacity: '0', transform: 'translateY(20px) scale(0.95)' },
+              '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+            },
+            fadeOutDown: {
+              '0%': { opacity: '1', transform: 'translateY(0)' },
+              '100%': { opacity: '0', transform: 'translateY(20px)' },
+            },
+            spinAndFade: {
+              '0%': { transform: 'rotate(0deg) scale(1)', opacity: '1' },
+              '40%': { transform: 'rotate(720deg) scale(0)', opacity: '0' },
+              '60%': { transform: 'rotate(720deg) scale(0)', opacity: '0' },
+              '100%': { transform: 'rotate(1080deg) scale(1)', opacity: '1' },
+            },
+            popIn: {
+              '0%': { opacity: '0', transform: 'scale(0.8)' },
+              '100%': { opacity: '1', transform: 'scale(1)' },
+            }
+          },
+          animation: {
+            'fade-in-up': 'fadeInUp 0.5s ease-out forwards',
+            'fade-out-down': 'fadeOutDown 0.5s ease-in forwards',
+            'spin-and-fade': 'spinAndFade 3s ease-in-out forwards',
+            'pop-in': 'popIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards'
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    body {
+      min-height: max(884px, 100dvh);
+    }
+    .phase { display: none; }
+    #phase-1, #game-container { display: flex; flex-direction: column; flex-grow: 1; }#phase-1, #phase-2, #phase-3, #phase-4, #phase-5 {
+      display: none;
+    }
+    .active-phase {
+        display: flex !important;
+        animation: pop-in 0.5s ease forwards;
+    }
+    .game-screen-body {--active-phase: 'phase-5';
+    }
+    .game-screen-body[data-phase="phase-1"] #phase-1 { display: block; }
+    .game-screen-body[data-phase="phase-2"] #phase-2 { display: flex; }
+    .game-screen-body[data-phase="phase-3"] #phase-3 { display: grid; }
+    .game-screen-body[data-phase="phase-4"] #phase-4 { display: flex; }
+    .game-screen-body[data-phase="phase-5"] #phase-5 { display: flex; }
+    .player-paper {
+        animation: fadeInUp 0.5s ease-out forwards;
+        opacity: 0;
+    }
+    .player-paper:nth-child(1) { animation-delay: 0.1s; }
+    .player-paper:nth-child(2) { animation-delay: 0.2s; }
+    .player-paper:nth-child(3) { animation-delay: 0.3s; }
+    .player-paper:nth-child(4) { animation-delay: 0.4s; }
+    .spinning-paper {
+        animation: spinAndFade 3s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
+    }
+    .spinning-paper:nth-child(1) { animation-delay: 0s; }
+    .spinning-paper:nth-child(2) { animation-delay: 0.15s; }
+    .spinning-paper:nth-child(3) { animation-delay: 0.3s; }
+    .spinning-paper:nth-child(4) { animation-delay: 0.45s; }
+    .accusable:hover, .accusable.selected {
+        transform: scale(1.05) !important;
+        box-shadow: 0 0 20px 5px rgba(255, 255, 0, 0.7);
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-display bg-game-bg dark game-screen-body" data-phase="phase-5">
+<div class="relative flex h-auto min-h-screen w-full flex-col overflow-hidden">
+<header class="absolute top-0 left-0 right-0 z-10 flex items-center justify-between bg-transparent p-4 pb-2">
+<button class="flex size-10 shrink-0 items-center justify-center text-white">
+<span class="material-symbols-outlined text-3xl">settings</span>
+</button>
+<h2 class="flex-1 text-center text-xl font-bold leading-tight tracking-[-0.015em] text-white pr-10">Round 1</h2>
+</header>
+<main class="flex flex-grow flex-col items-center justify-center p-4">
+<div class="w-full max-w-sm" id="phase-1">
+<div class="grid grid-cols-2 gap-4 aspect-square">
+<div class="player-paper flex flex-col items-center justify-center rounded-xl bg-paper p-4 shadow-lg transform -rotate-6">
+<p class="text-paper-text text-lg font-bold">Player 1</p><p class="text-paper-text/70">Jessica</p>
+</div>
+<div class="player-paper flex flex-col items-center justify-center rounded-xl bg-paper p-4 shadow-lg transform rotate-3">
+<p class="text-paper-text text-lg font-bold">Player 2</p><p class="text-paper-text/70">You</p>
+</div>
+<div class="player-paper flex flex-col items-center justify-center rounded-xl bg-paper p-4 shadow-lg transform rotate-4">
+<p class="text-paper-text text-lg font-bold">Player 3</p><p class="text-paper-text/70">Michael</p>
+</div>
+<div class="player-paper flex flex-col items-center justify-center rounded-xl bg-paper p-4 shadow-lg transform -rotate-2">
+<p class="text-paper-text text-lg font-bold">Player 4</p><p class="text-paper-text/70">David</p>
+</div>
+</div>
+</div>
+<div class="absolute inset-0 flex flex-col items-center justify-center bg-game-bg/80 backdrop-blur-sm z-20" id="phase-2">
+<div class="grid grid-cols-2 gap-8 w-full max-w-sm aspect-square">
+<div class="spinning-paper flex items-center justify-center rounded-xl bg-paper/50 shadow-lg"></div>
+<div class="spinning-paper flex items-center justify-center rounded-xl bg-paper/50 shadow-lg"></div>
+<div class="spinning-paper flex items-center justify-center rounded-xl bg-paper/50 shadow-lg"></div>
+<div class="spinning-paper flex items-center justify-center rounded-xl bg-paper/50 shadow-lg"></div>
+</div>
+<p class="text-white text-2xl font-bold animate-pulse mt-8">Assigning roles...</p>
+</div>
+<div class="grid grid-cols-2 gap-4 w-full max-w-sm aspect-square" id="phase-3">
+<div class="player-paper flex flex-col items-center justify-center rounded-xl bg-paper p-4 shadow-lg transform -rotate-6">
+<p class="text-paper-text text-lg font-bold">Player 1</p><p class="text-paper-text/70">Jessica</p>
+</div>
+<div class="player-paper flex flex-col items-center justify-center rounded-xl bg-role-owner p-4 shadow-lg transform rotate-3">
+<p class="text-paper-text text-lg font-bold">Player 2</p><p class="text-paper-text text-xl font-extrabold mt-1">OWNER</p>
+</div>
+<div class="player-paper flex flex-col items-center justify-center rounded-xl bg-paper p-4 shadow-lg transform rotate-4">
+<p class="text-paper-text text-lg font-bold">Player 3</p><p class="text-paper-text/70">Michael</p>
+</div>
+<div class="player-paper flex flex-col items-center justify-center rounded-xl bg-role-police p-4 shadow-lg transform -rotate-2">
+<p class="text-white text-lg font-bold">Player 4</p><p class="text-white text-xl font-extrabold mt-1">POLICE</p>
+</div>
+</div>
+<div class="absolute inset-0 flex flex-col items-center justify-center z-30 p-4" id="phase-4">
+<div class="grid grid-cols-2 gap-4 w-full max-w-sm aspect-square absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-30">
+<div class="accusable flex flex-col items-center justify-center rounded-xl bg-paper p-4 shadow-lg transform -rotate-6">
+<p class="text-paper-text text-lg font-bold">Player 1</p><p class="text-paper-text/70">Jessica</p>
+</div>
+<div class="accusable flex flex-col items-center justify-center rounded-xl bg-role-owner p-4 shadow-lg transform rotate-3">
+<p class="text-paper-text text-lg font-bold">Player 2</p><p class="text-paper-text text-xl font-extrabold mt-1">OWNER</p>
+</div>
+<div class="accusable flex flex-col items-center justify-center rounded-xl bg-paper p-4 shadow-lg transform rotate-4">
+<p class="text-paper-text text-lg font-bold">Player 3</p><p class="text-paper-text/70">Michael</p>
+</div>
+<div class="accusable flex flex-col items-center justify-center rounded-xl bg-role-police p-4 shadow-lg transform -rotate-2">
+<p class="text-white text-lg font-bold">Player 4</p><p class="text-white text-xl font-extrabold mt-1">POLICE</p>
+</div>
+</div>
+<div class="bg-paper rounded-xl w-full max-w-sm p-6 text-center shadow-2xl flex flex-col items-center gap-4 animate-pop-in">
+<h3 class="text-paper-text text-2xl font-bold">Police Investigation</h3>
+<p class="text-paper-text/80">As the Police, you must identify the Owner.</p>
+<p class="text-paper-text/80 font-semibold">Tap on a player to accuse them.</p>
+<button class="mt-4 bg-role-police text-white font-bold py-3 px-6 rounded-lg w-full">Got it</button>
+</div>
+</div>
+<div class="absolute inset-0 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm z-40 p-4" id="phase-5">
+<div class="animate-pop-in bg-paper/10 border border-white/20 rounded-xl w-full max-w-md p-6 text-center shadow-2xl flex flex-col items-center gap-6">
+<h3 class="text-white text-3xl font-bold">Round Over!</h3>
+<div class="w-full space-y-3 text-left">
+<div class="flex items-center justify-between bg-white/10 p-3 rounded-lg">
+<div><p class="text-white font-bold">Jessica (Player 1)</p><p class="text-white/70 text-sm">Citizen</p></div>
+<p class="text-white text-lg font-semibold">+0 pts</p>
+</div>
+<div class="flex items-center justify-between bg-role-owner/30 p-3 rounded-lg border-2 border-role-owner">
+<div><p class="text-white font-bold">You (Player 2)</p><p class="text-white/90 text-sm font-semibold">Owner</p></div>
+<p class="text-white text-lg font-semibold">+10 pts</p>
+</div>
+<div class="flex items-center justify-between bg-alert-red/30 p-3 rounded-lg border-2 border-alert-red">
+<div><p class="text-white font-bold">Michael (Player 3)</p><p class="text-white/70 text-sm">Citizen (Accused)</p></div>
+<p class="text-white text-lg font-semibold">-5 pts</p>
+</div>
+<div class="flex items-center justify-between bg-role-police/30 p-3 rounded-lg">
+<div><p class="text-white font-bold">David (Player 4)</p><p class="text-white/90 text-sm font-semibold">Police</p></div>
+<p class="text-white text-lg font-semibold">-5 pts</p>
+</div>
+</div>
+</div>
+<button class="animate-fade-in-up mt-8 bg-cta-green text-white font-bold py-4 px-8 rounded-full text-lg shadow-lg w-full max-w-md">Next Round</button>
+</div>
+</main>
+<footer class="p-4"></footer>
+</div>
+
+</body></html>

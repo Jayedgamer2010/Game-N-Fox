@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Final Results</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+      .confetti {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background-color: #ffd700;
+        opacity: 0.7;
+        animation: fall 5s linear infinite;
+        border-radius: 50%;
+      }
+      .confetti.triangle {
+        width: 0;
+        height: 0;
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+        border-bottom: 10px solid #1e94f6;
+        background-color: transparent;
+        border-radius: 0;
+      }
+      .confetti.rectangle {
+        width: 8px;
+        height: 15px;
+        background-color: #ef4444;
+        border-radius: 2px;
+      }
+      @keyframes fall {
+        0% { transform: translateY(-10vh) rotate(0deg); }
+        100% { transform: translateY(110vh) rotate(720deg); }
+      }
+    </style>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#1e94f6",
+              "background-light": "#f5f7f8",
+              "background-dark": "#101a22",
+            },
+            fontFamily: {
+              "display": ["Plus Jakarta Sans", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="relative flex h-full min-h-screen w-full flex-col items-center overflow-hidden">
+<!-- Confetti Background -->
+<div class="absolute inset-0 z-0 pointer-events-none">
+<div class="confetti" style="left: 10%; animation-duration: 4s; animation-delay: 0s;"></div>
+<div class="confetti triangle" style="left: 20%; animation-duration: 6s; animation-delay: 1s;"></div>
+<div class="confetti rectangle" style="left: 30%; animation-duration: 5s; animation-delay: 0.5s;"></div>
+<div class="confetti" style="left: 40%; animation-duration: 7s; animation-delay: 2s;"></div>
+<div class="confetti rectangle" style="left: 50%; animation-duration: 4.5s; animation-delay: 1.5s;"></div>
+<div class="confetti" style="left: 60%; animation-duration: 8s; animation-delay: 0.2s;"></div>
+<div class="confetti triangle" style="left: 70%; animation-duration: 5.5s; animation-delay: 2.5s;"></div>
+<div class="confetti" style="left: 80%; animation-duration: 6.5s; animation-delay: 1.2s;"></div>
+<div class="confetti rectangle" style="left: 90%; animation-duration: 4s; animation-delay: 0.8s;"></div>
+</div>
+<div class="relative z-10 flex w-full max-w-md flex-col px-4 pt-16 pb-8">
+<!-- Header -->
+<div class="text-center">
+<h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Final Results</h1>
+<p class="mt-1 text-base text-slate-500 dark:text-slate-400">16 Rounds Complete</p>
+</div>
+<!-- Player List -->
+<div class="mt-8 flex flex-col gap-3">
+<!-- 1st Place -->
+<div class="flex items-center gap-4 rounded-xl border-2 border-amber-400 bg-amber-400/20 p-4 shadow-lg">
+<span class="text-2xl font-bold text-amber-500">1</span>
+<div class="flex flex-1 items-center gap-4">
+<div class="relative">
+<div class="flex h-12 w-12 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700">
+<span class="material-symbols-outlined text-3xl text-slate-500">person</span>
+</div>
+<div class="absolute -top-3 -right-2 text-3xl text-amber-400">
+<span class="material-symbols-outlined !text-4xl" style="fill: currentColor; font-variation-settings: 'FILL' 1;">workspace_premium</span>
+</div>
+</div>
+<div class="flex flex-col justify-center">
+<p class="text-base font-semibold text-slate-900 dark:text-white">Eleanor</p>
+<p class="text-sm font-medium text-amber-600 dark:text-amber-400">Winner!</p>
+</div>
+</div>
+<div class="shrink-0"><p class="text-lg font-bold text-slate-900 dark:text-white">1250 pts</p></div>
+</div>
+<!-- 2nd Place -->
+<div class="flex items-center gap-4 rounded-xl bg-white/50 dark:bg-slate-800/50 p-4 backdrop-blur-sm">
+<span class="text-2xl font-bold text-slate-400 dark:text-slate-500">2</span>
+<div class="flex flex-1 items-center gap-4">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-12 w-12" data-alt="Abstract placeholder image for Benjamin" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC7VmIsFTg1vvZvx4zLwiuH-xgmiFkVpoR68vQUK_iPnKegEaP-ECrJUFnVS_Yoss29IwHP2PtEwv0ZiQw6rX6ZKEDIy9sIZe52sJwST_hWOqmecZDM2Zz3cT_oCGTl0WZBmpjXtr4scdLrk4UaEJEuK1QjVc59oRN9zb6hGKR9EvVz3c5u8ujsm5OTnpthTZAAzx18L9E6da-WlPjLCartLH2DTLOnslOmhxdEy3CmqrrBnO8JKyrI0Zln0IKSatGuqX16SSXEff8');"></div>
+<div class="flex flex-col justify-center">
+<p class="text-base font-medium text-slate-800 dark:text-slate-200">Benjamin</p>
+</div>
+</div>
+<div class="shrink-0"><p class="text-base font-medium text-slate-600 dark:text-slate-300">980 pts</p></div>
+</div>
+<!-- 3rd Place -->
+<div class="flex items-center gap-4 rounded-xl bg-white/50 dark:bg-slate-800/50 p-4 backdrop-blur-sm">
+<span class="text-2xl font-bold text-slate-400 dark:text-slate-500">3</span>
+<div class="flex flex-1 items-center gap-4">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-12 w-12" data-alt="Abstract placeholder image for Chloe" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBCZoJ6TDoY1kwlm_wpeCzqIGBBkse7iztjJayBepH1Q2chBCkbDewJFIyf09dEExAXWLg2uWl7GfLIo85ItLODq7FKVvG-JSBPyFYZBX2TRBnLFd6E9_JY0T1e4o5-TDSRlRSa3ve5gDzvkvNQy5-oiG0EQL01KDkmi79Ra8ZpLuK5LLxJ7OUnMJeGWPxoSZPWimQPKvic1zJSTGa3eXrKWcKoLZERk1KEXK3RnFRU1NoLybw4UDhAkg8p5EBChnUiYGckBvEJ1XY');"></div>
+<div class="flex flex-col justify-center">
+<p class="text-base font-medium text-slate-800 dark:text-slate-200">Chloe</p>
+</div>
+</div>
+<div class="shrink-0"><p class="text-base font-medium text-slate-600 dark:text-slate-300">760 pts</p></div>
+</div>
+<!-- 4th Place -->
+<div class="flex items-center gap-4 rounded-xl bg-white/50 dark:bg-slate-800/50 p-4 backdrop-blur-sm">
+<span class="text-2xl font-bold text-slate-400 dark:text-slate-500">4</span>
+<div class="flex flex-1 items-center gap-4">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-12 w-12" data-alt="Abstract placeholder image for David" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDpAUusbATCfBJXmHOU28u4rljBNSi-6UkI4J8Ktzxz0f2jmjnSr1vJCCMlErJmCX_vi2ARtlov4v7EK5Uzobhn6a3rE8Nu42_Uf-XNO_rfRK1IyrARnmm3ajpSHl5saZH1NnR9KdzjbWyVRqukBsvVAJZizHZPKZ-oHQyvmRsL3cdPi1anfEcTkZnJ8AY4-LohfZo3RQ2oumYxz1Kh_kh7P-ApippC8Z8w3P6MSMJlZLE8pVktbBXDA5eZfK3vFv6aema0g0ezHtQ');"></div>
+<div class="flex flex-col justify-center">
+<p class="text-base font-medium text-slate-800 dark:text-slate-200">David</p>
+</div>
+</div>
+<div class="shrink-0"><p class="text-base font-medium text-slate-600 dark:text-slate-300">510 pts</p></div>
+</div>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="sticky bottom-0 z-20 mt-auto flex w-full max-w-md flex-col gap-3 bg-gradient-to-t from-background-light dark:from-background-dark to-transparent px-4 pb-8 pt-4">
+<button class="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-base font-bold text-white shadow-lg transition-transform active:scale-95">
+<span class="material-symbols-outlined">replay</span>
+                Play Again
+            </button>
+<button class="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary/20 text-base font-bold text-primary transition-transform active:scale-95 dark:bg-slate-700 dark:text-slate-200">
+<span class="material-symbols-outlined">ios_share</span>
+                Share Results
+            </button>
+</div>
+</div>
+</body></html>

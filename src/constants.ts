@@ -7,6 +7,8 @@ export const INITIAL_PLAYERS: Player[] = [
   { id: 4, name: '', totalScore: 0, currentRole: null, roundPoints: 0, color: '#FFCC00', isAi: false },
 ];
 
+export const PLAYER_DIRECTIONS = ['SOUTH', 'WEST', 'NORTH', 'EAST'];
+
 export const MAX_ROUNDS = 16;
 
 export const ROTATIONS = [
@@ -15,6 +17,10 @@ export const ROTATIONS = [
   'rotate-4',
   '-rotate-2'
 ];
+
+export const CONFETTI_COLORS = ['#FFD700', '#1e94f6', '#EF4444', '#22C55E', '#A855F7', '#F97316'];
+
+export const CONFETTI_SHAPES = ['circle', 'triangle', 'rectangle'] as const;
 
 export const GAMES: Record<GameId, GameDefinition> = {
   [GameId.THIEF_POLICE]: {

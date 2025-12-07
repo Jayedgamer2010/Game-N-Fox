@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>4-Player Role Game Setup</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#007AFF",
+              "background-light": "#F8F8F8",
+              "background-dark": "#101a22",
+            },
+            fontFamily: {
+              "display": ["Plus Jakarta Sans", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.5rem", "lg": "0.75rem", "xl": "1rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="relative flex h-auto min-h-screen w-full flex-col">
+<!-- Top App Bar -->
+<div class="flex items-center p-4 pb-2 justify-between bg-background-light dark:bg-background-dark sticky top-0 z-10">
+<div class="flex size-12 shrink-0 items-center justify-start text-zinc-900 dark:text-white">
+<span class="material-symbols-outlined text-2xl">arrow_back_ios_new</span>
+</div>
+<h2 class="text-zinc-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-12">Game Setup</h2>
+</div>
+<main class="flex-grow px-4">
+<!-- Headline Text -->
+<h1 class="text-zinc-900 dark:text-white text-[32px] font-bold leading-tight tracking-tight pt-6 pb-2">Enter Player Names</h1>
+<p class="text-zinc-500 dark:text-zinc-400 text-base pb-8">Enter player names to begin.</p>
+<!-- Player Input List -->
+<div class="flex flex-col gap-4">
+<!-- List Item SOUTH -->
+<div class="flex items-center gap-4 bg-zinc-100/50 dark:bg-zinc-800/40 p-4 rounded-lg">
+<div class="flex items-center gap-4 flex-1">
+<div class="flex items-center justify-center rounded-full shrink-0 size-8 bg-[#34C759]"></div>
+<p class="text-zinc-900 dark:text-white text-base font-medium leading-normal w-16">SOUTH</p>
+<input class="flex-1 bg-transparent text-zinc-900 dark:text-white placeholder:text-zinc-500 dark:placeholder:text-zinc-400 border-0 p-0 focus:ring-0 text-right" placeholder="Player 1 Name" type="text"/>
+</div>
+</div>
+<!-- List Item WEST -->
+<div class="flex items-center gap-4 bg-zinc-100/50 dark:bg-zinc-800/40 p-4 rounded-lg">
+<div class="flex items-center gap-4 flex-1">
+<div class="flex items-center justify-center rounded-full shrink-0 size-8 bg-[#007AFF]"></div>
+<p class="text-zinc-900 dark:text-white text-base font-medium leading-normal w-16">WEST</p>
+<input class="flex-1 bg-transparent text-zinc-900 dark:text-white placeholder:text-zinc-500 dark:placeholder:text-zinc-400 border-0 p-0 focus:ring-0 text-right" placeholder="Player 2 Name" type="text"/>
+</div>
+</div>
+<!-- List Item NORTH -->
+<div class="flex items-center gap-4 bg-zinc-100/50 dark:bg-zinc-800/40 p-4 rounded-lg">
+<div class="flex items-center gap-4 flex-1">
+<div class="flex items-center justify-center rounded-full shrink-0 size-8 bg-[#FF3B30]"></div>
+<p class="text-zinc-900 dark:text-white text-base font-medium leading-normal w-16">NORTH</p>
+<input class="flex-1 bg-transparent text-zinc-900 dark:text-white placeholder:text-zinc-500 dark:placeholder:text-zinc-400 border-0 p-0 focus:ring-0 text-right" placeholder="Player 3 Name" type="text"/>
+</div>
+</div>
+<!-- List Item EAST -->
+<div class="flex items-center gap-4 bg-zinc-100/50 dark:bg-zinc-800/40 p-4 rounded-lg">
+<div class="flex items-center gap-4 flex-1">
+<div class="flex items-center justify-center rounded-full shrink-0 size-8 bg-[#FFCC00]"></div>
+<p class="text-zinc-900 dark:text-white text-base font-medium leading-normal w-16">EAST</p>
+<input class="flex-1 bg-transparent text-zinc-900 dark:text-white placeholder:text-zinc-500 dark:placeholder:text-zinc-400 border-0 p-0 focus:ring-0 text-right" placeholder="Player 4 Name" type="text"/>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Action Button -->
+<div class="p-4 pt-8 sticky bottom-0 bg-gradient-to-t from-background-light dark:from-background-dark to-transparent">
+<!-- Inactive State -->
+<button class="w-full h-14 bg-zinc-200 dark:bg-zinc-800 rounded-lg text-zinc-400 dark:text-zinc-600 font-bold text-base cursor-not-allowed">Start Game</button>
+<!-- Active State - Uncomment or use JS to switch classes -->
+<!-- <button class="w-full h-14 bg-primary rounded-lg text-white font-bold text-base">Start Game</button> -->
+</div>
+</div>
+</body></html>
