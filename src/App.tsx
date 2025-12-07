@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { GamePhase, Player, GameState, GameId } from './types';
 import { INITIAL_PLAYERS, MAX_ROUNDS, GAMES, ROTATIONS, PLAYER_DIRECTIONS, CONFETTI_COLORS, CONFETTI_SHAPES } from './constants';
+import redSuitBackground from '@assets/generated_images/red_suited_guard_figure.png';
 
 const BGM_URL = "https://cdn.pixabay.com/download/audio/2022/11/22/audio_febc508520.mp3?filename=fun-life-112188.mp3";
 const START_SFX_URL = "https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3";
@@ -171,9 +172,12 @@ const HomeScreen: React.FC<{ onSelectGame: (id: GameId) => void }> = ({ onSelect
   };
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col bg-background-dark">
+    <div 
+      className="relative flex min-h-screen w-full flex-col bg-background-dark bg-cover bg-center bg-fixed"
+      style={{ backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.65) 100%), url(${redSuitBackground})` }}
+    >
       <main className="flex-1 pb-24">
-        <div className="flex items-center bg-background-dark p-4 pb-2 justify-between sticky top-0 z-10 animate-fade-in-up">
+        <div className="flex items-center bg-transparent p-4 pb-2 justify-between sticky top-0 z-10 animate-fade-in-up backdrop-blur-sm">
           <div className="flex h-12 w-12 shrink-0 items-center justify-start text-white">
             <span className="material-symbols-outlined !text-3xl">stadia_controller</span>
           </div>
