@@ -607,6 +607,7 @@ const App: React.FC = () => {
   const [isTaskRevealed, setIsTaskRevealed] = useState(false);
   const timerIntervalRef = useRef<number | null>(null);
   const [isMultiplayerMode, setIsMultiplayerMode] = useState(false);
+  const myMultiplayerGameIndexRef = useRef<number>(-1);
 
   const handleGameStateUpdate = useCallback((data: { gameState: any }) => {
     console.log('Received game state update from other player:', data.gameState);
@@ -761,32 +762,41 @@ const App: React.FC = () => {
       if (gameState.phase !== GamePhase.GAME_LOBBY && multiplayerState.room.status === 'waiting') {
         setGameState(prev => ({ ...prev, phase: GamePhase.GAME_LOBBY }));
       }
-      if (multiplayerState.room.status === 'playing' && gameState.phase === GamePhase.GAME_LOBBY) {
+      
+      if (multiplayerState.room.status === 'playing') {
         const roomPlayers = multiplayerState.room.players;
-        const maxPlayers = multiplayerState.room.maxPlayers;
-        const newPlayers = INITIAL_PLAYERS.slice(0, maxPlayers).map((p, i) => {
-          const roomPlayer = roomPlayers[i];
-          const isAi = !roomPlayer && i < roomPlayers.length + multiplayerState.room!.aiCount;
-          return {
-            ...p,
-            name: roomPlayer?.name || (isAi ? `Bot ${i + 1}` : `Player ${i + 1}`),
-            isAi: isAi,
-          };
-        });
-        setGameState(prev => ({
-          ...prev,
-          players: newPlayers,
-          phase: GamePhase.ASSIGN_ROLES,
-          currentRound: 1,
-        }));
+        const myRoomIndex = roomPlayers.findIndex(p => p.id === multiplayerState.playerId);
+        if (myRoomIndex >= 0 && myMultiplayerGameIndexRef.current !== myRoomIndex) {
+          myMultiplayerGameIndexRef.current = myRoomIndex;
+        }
+        
+        if (gameState.phase === GamePhase.GAME_LOBBY) {
+          const maxPlayers = multiplayerState.room.maxPlayers;
+          const newPlayers = INITIAL_PLAYERS.slice(0, maxPlayers).map((p, i) => {
+            const roomPlayer = roomPlayers[i];
+            const isAi = !roomPlayer && i < roomPlayers.length + multiplayerState.room!.aiCount;
+            return {
+              ...p,
+              name: roomPlayer?.name || (isAi ? `Bot ${i + 1}` : `Player ${i + 1}`),
+              isAi: isAi,
+            };
+          });
+          setGameState(prev => ({
+            ...prev,
+            players: newPlayers,
+            phase: GamePhase.ASSIGN_ROLES,
+            currentRound: 1,
+          }));
+        }
       }
     }
-  }, [multiplayerState.room, gameState.phase]);
+  }, [multiplayerState.room, gameState.phase, multiplayerState.playerId]);
 
   const handleGoHome = () => {
     if (isMultiplayerMode) {
       leaveRoom();
       setIsMultiplayerMode(false);
+      myMultiplayerGameIndexRef.current = -1;
     }
     setGameState({
       gameId: GameId.THIEF_POLICE,
@@ -1139,6 +1149,17 @@ const App: React.FC = () => {
     if (gameState.tttWinner || gameState.phase !== GamePhase.PLAYING) return;
     if (gameState.xMoves?.includes(index) || gameState.oMoves?.includes(index)) return;
     if (gameState.tttTurn === 'O' && gameState.players[1]?.isAi) return;
+
+    if (isMultiplayerMode && multiplayerState.isConnected) {
+      const myGameIndex = myMultiplayerGameIndexRef.current;
+      if (myGameIndex >= 0) {
+        const isMyTurnAsX = gameState.tttTurn === 'X' && myGameIndex === 0;
+        const isMyTurnAsO = gameState.tttTurn === 'O' && myGameIndex === 1;
+        if (!isMyTurnAsX && !isMyTurnAsO) {
+          return;
+        }
+      }
+    }
 
     playSfx(SELECT_SFX_URL);
 

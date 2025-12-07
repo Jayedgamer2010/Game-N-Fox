@@ -24,10 +24,10 @@ interface PlayerRanking {
 }
 
 const CARD_COLORS = [
-  { bg: 'bg-rose-700', border: 'border-rose-500' },
-  { bg: 'bg-blue-700', border: 'border-blue-500' },
-  { bg: 'bg-emerald-700', border: 'border-emerald-500' },
-  { bg: 'bg-purple-700', border: 'border-purple-500' },
+  { bg: 'bg-rose-700', border: 'border-rose-500', text: 'text-rose-100' },
+  { bg: 'bg-blue-700', border: 'border-blue-500', text: 'text-blue-100' },
+  { bg: 'bg-emerald-700', border: 'border-emerald-500', text: 'text-emerald-100' },
+  { bg: 'bg-purple-700', border: 'border-purple-500', text: 'text-purple-100' },
 ];
 
 const PRESET_THEMES = {
@@ -88,6 +88,13 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({ onExit }) => {
   });
 
   const positions: Position[] = ['south', 'west', 'north', 'east'];
+  
+  const positionLabels: Record<Position, string> = {
+    south: 'You (South)',
+    west: 'West',
+    north: 'North',
+    east: 'East',
+  };
 
   const handleNameChange = (index: number, value: string) => {
     const newNames = [...playerNames];
@@ -206,19 +213,12 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({ onExit }) => {
   }, [matchHistory, positions]);
 
   const calculateRankings = useCallback((currentHands: Record<Position, Card[]>, winnerPos: Position, history: MatchHistory[]): PlayerRanking[] => {
-    const positionNames: Record<Position, string> = {
-      south: 'You',
-      west: 'West',
-      north: 'North',
-      east: 'East',
-    };
-
     const allRankings = positions.map(pos => {
       const level = getMatchLevel(currentHands[pos]);
       const historyEntry = history.find(h => h.position === pos && h.matchLevel === level);
       return {
         position: pos,
-        name: positionNames[pos],
+        name: positionLabels[pos],
         matchLevel: level,
         firstAchieved: historyEntry?.round || currentRound,
         hand: currentHands[pos],
@@ -238,7 +238,7 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({ onExit }) => {
       ...r,
       place: idx + 1,
     }));
-  }, [currentRound, positions]);
+  }, [currentRound, positions, positionLabels]);
 
   const passCards = useCallback(() => {
     if (selectedCardIndex === null) return;
@@ -523,10 +523,28 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({ onExit }) => {
 
   const isRotating = gamePhase === 'rotating';
 
+  const renderOpponentHand = (position: Position, label: string) => {
+    const hand = hands[position];
+    return (
+      <div className="flex flex-col items-center gap-2">
+        <p className="text-white/60 text-sm font-medium">{label}</p>
+        <div className="flex gap-1.5">
+          {hand.map((_, idx) => (
+            <div 
+              key={idx} 
+              className="w-10 h-14 bg-gradient-to-br from-zinc-700 to-zinc-800 rounded-lg border border-white/10 shadow-md flex items-center justify-center"
+            >
+              <span className="material-symbols-outlined text-white/20 text-lg">style</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="relative flex h-screen w-full flex-col p-4 pt-6 overflow-hidden bg-background-dark">
-      {/* Top App Bar */}
-      <div className="flex items-center justify-between pb-2">
+    <div className="relative flex min-h-screen w-full flex-col bg-background-dark overflow-hidden">
+      <div className="flex items-center justify-between p-4 pb-2">
         <div className="flex size-12 shrink-0 items-center justify-start">
           <span className="material-symbols-outlined text-white/80 text-[28px]">neurology</span>
         </div>
@@ -539,133 +557,115 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({ onExit }) => {
               onClick={onExit}
               className="flex h-12 w-12 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-transparent text-white/80 hover:bg-white/10"
             >
-              <span className="material-symbols-outlined text-[28px]">settings</span>
+              <span className="material-symbols-outlined text-[28px]">close</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* Main Game Board */}
-      <div className="flex-1 flex flex-col items-center justify-center relative">
-        {/* Headline Text */}
-        <div className="absolute top-4 text-center z-10">
-          <h2 className="text-white tracking-light text-[28px] font-bold leading-tight">
-            {isRotating ? 'Passing cards...' : 'Select a card to pass'}
-          </h2>
-          <p className="text-white/60 text-base font-normal leading-normal pt-1">
-            {isRotating ? 'Cards rotating clockwise' : 'Your Turn'}
-          </p>
-        </div>
+      <div className="text-center px-4 pt-2 pb-4">
+        <h2 className="text-white tracking-light text-2xl font-bold leading-tight">
+          {isRotating ? 'Passing cards...' : 'Select a card to pass'}
+        </h2>
+        <p className="text-white/60 text-sm font-normal leading-normal pt-1">
+          {isRotating ? 'Cards rotating clockwise' : 'Your Turn - Tap a card to select it'}
+        </p>
+      </div>
 
-        {/* Central Arrow Indicator - Clockwise rotation */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="relative w-32 h-32">
-            {/* Top-right arrow (from North to East) */}
-            <span 
-              className={`material-symbols-outlined absolute top-0 right-0 transition-all ${isRotating ? 'text-primary/60 animate-pulse' : 'text-white/10'}`} 
-              style={{ fontSize: '28px', transform: 'rotate(45deg)' }}
-            >
-              arrow_forward
-            </span>
-            {/* Bottom-right arrow (from East to South) */}
-            <span 
-              className={`material-symbols-outlined absolute bottom-0 right-0 transition-all ${isRotating ? 'text-primary/60 animate-pulse' : 'text-white/10'}`} 
-              style={{ fontSize: '28px', transform: 'rotate(135deg)' }}
-            >
-              arrow_forward
-            </span>
-            {/* Bottom-left arrow (from South to West) */}
-            <span 
-              className={`material-symbols-outlined absolute bottom-0 left-0 transition-all ${isRotating ? 'text-primary/60 animate-pulse' : 'text-white/10'}`} 
-              style={{ fontSize: '28px', transform: 'rotate(225deg)' }}
-            >
-              arrow_forward
-            </span>
-            {/* Top-left arrow (from West to North) */}
-            <span 
-              className={`material-symbols-outlined absolute top-0 left-0 transition-all ${isRotating ? 'text-primary/60 animate-pulse' : 'text-white/10'}`} 
-              style={{ fontSize: '28px', transform: 'rotate(-45deg)' }}
-            >
-              arrow_forward
-            </span>
-          </div>
-        </div>
+      <div className="flex-1 flex flex-col items-center justify-center px-4 py-2">
+        <div className="w-full max-w-md flex flex-col items-center gap-6">
+          {renderOpponentHand('north', 'North (AI)')}
 
-        {/* Player Areas Layout */}
-        <div className="relative w-full max-w-sm aspect-square">
-          {/* Player North (Player 3) */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4/5">
-            <p className="text-white/60 text-sm font-normal leading-normal text-center mb-2">Player 3</p>
-            <div className="grid grid-cols-4 gap-2">
-              {hands.north.map((_, idx) => (
-                <div key={idx} className="w-full bg-white/5 aspect-[3/4] rounded-lg border border-white/10" />
-              ))}
+          <div className="flex w-full justify-between items-center px-4">
+            <div className="transform -rotate-90 origin-center">
+              {renderOpponentHand('west', 'West (AI)')}
+            </div>
+
+            <div className="relative w-20 h-20">
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className={`w-16 h-16 rounded-full border-2 border-dashed ${isRotating ? 'border-primary animate-spin' : 'border-white/20'}`}></div>
+              </div>
+              <span 
+                className={`material-symbols-outlined absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 ${isRotating ? 'text-primary' : 'text-white/30'}`} 
+                style={{ fontSize: '20px' }}
+              >
+                arrow_upward
+              </span>
+              <span 
+                className={`material-symbols-outlined absolute right-0 top-1/2 -translate-y-1/2 translate-x-1 ${isRotating ? 'text-primary' : 'text-white/30'}`} 
+                style={{ fontSize: '20px' }}
+              >
+                arrow_forward
+              </span>
+              <span 
+                className={`material-symbols-outlined absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1 ${isRotating ? 'text-primary' : 'text-white/30'}`} 
+                style={{ fontSize: '20px' }}
+              >
+                arrow_downward
+              </span>
+              <span 
+                className={`material-symbols-outlined absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 ${isRotating ? 'text-primary' : 'text-white/30'}`} 
+                style={{ fontSize: '20px' }}
+              >
+                arrow_back
+              </span>
+            </div>
+
+            <div className="transform rotate-90 origin-center">
+              {renderOpponentHand('east', 'East (AI)')}
             </div>
           </div>
 
-          {/* Player West (Player 2) - Rotated 90 degrees */}
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-4/5 origin-center rotate-90">
-            <p className="text-white/60 text-sm font-normal leading-normal text-center mb-2 -rotate-90">Player 2</p>
-            <div className="grid grid-cols-4 gap-2">
-              {hands.west.map((_, idx) => (
-                <div key={idx} className="w-full bg-white/5 aspect-[3/4] rounded-lg border border-white/10" />
-              ))}
-            </div>
-          </div>
-
-          {/* Player East (Player 4) - Rotated -90 degrees */}
-          <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-4/5 origin-center -rotate-90">
-            <p className="text-white/60 text-sm font-normal leading-normal text-center mb-2 rotate-90">Player 4</p>
-            <div className="grid grid-cols-4 gap-2">
-              {hands.east.map((_, idx) => (
-                <div key={idx} className="w-full bg-white/5 aspect-[3/4] rounded-lg border border-white/10" />
-              ))}
-            </div>
-          </div>
-
-          {/* Player South (You) */}
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-full p-3 rounded-xl bg-primary/20 border-2 border-primary shadow-lg shadow-primary/20">
-            <p className="text-white text-base font-bold leading-normal text-center mb-3">You</p>
-            <div className="grid grid-cols-4 gap-2 px-2">
+          <div className="w-full p-4 rounded-2xl bg-primary/10 border-2 border-primary/50 shadow-lg shadow-primary/10">
+            <p className="text-white text-base font-bold leading-normal text-center mb-4">
+              Your Hand (South)
+            </p>
+            <div className="grid grid-cols-4 gap-3">
               {hands.south.map((card, idx) => (
-                <div key={card.id} className="flex flex-col gap-3">
-                  <button
-                    onClick={() => !isRotating && setSelectedCardIndex(idx)}
-                    disabled={isRotating}
-                    className={`cursor-pointer transition-all ${isRotating ? 'opacity-50' : ''}`}
-                  >
-                    <div
-                      className={`relative w-full aspect-[3/4] rounded-lg flex items-center justify-center p-2 text-center transition-all ${
-                        CARD_COLORS[card.colorIndex].bg
-                      } ${
-                        selectedCardIndex === idx
-                          ? 'border-2 border-white ring-2 ring-white shadow-lg shadow-white/30 transform scale-105'
-                          : 'border-2 border-transparent hover:border-white'
-                      }`}
-                    >
-                      <span className="font-bold text-white text-sm sm:text-base leading-tight uppercase">{card.name}</span>
+                <button
+                  key={card.id}
+                  onClick={() => !isRotating && setSelectedCardIndex(idx)}
+                  disabled={isRotating}
+                  className={`relative aspect-[3/4] rounded-xl flex flex-col items-center justify-center p-2 text-center transition-all duration-200 ${
+                    CARD_COLORS[card.colorIndex].bg
+                  } ${
+                    selectedCardIndex === idx
+                      ? 'ring-4 ring-white shadow-xl shadow-white/20 scale-105 -translate-y-2'
+                      : 'hover:scale-102 hover:-translate-y-1 hover:shadow-lg'
+                  } ${isRotating ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                >
+                  <span className="font-bold text-white text-sm leading-tight uppercase break-words">{card.name}</span>
+                  {selectedCardIndex === idx && (
+                    <div className="absolute -top-2 -right-2 flex size-6 items-center justify-center rounded-full bg-white text-primary">
+                      <span className="material-symbols-outlined text-sm">check</span>
                     </div>
-                  </button>
-                </div>
+                  )}
+                </button>
               ))}
             </div>
+            {selectedCardIndex !== null && !isRotating && (
+              <p className="text-center text-primary text-sm mt-3 font-medium">
+                Passing "{hands.south[selectedCardIndex].name}" to West
+              </p>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Action Button */}
-      <div className="w-full pt-4 pb-2">
+      <div className="p-4 pb-6">
         <button
           onClick={passCards}
           disabled={selectedCardIndex === null || isRotating}
-          className={`w-full flex items-center justify-center rounded-xl h-14 gap-2 text-lg font-bold leading-normal tracking-[0.015em] transition-all shadow-lg ${
+          className={`w-full flex items-center justify-center rounded-xl h-14 gap-2 text-lg font-bold leading-normal tracking-[0.015em] transition-all ${
             selectedCardIndex !== null && !isRotating
-              ? 'bg-primary text-white shadow-primary/30 hover:bg-primary/90'
+              ? 'bg-primary text-white shadow-lg shadow-primary/30 hover:bg-primary/90 active:scale-[0.98]'
               : 'bg-zinc-700 text-zinc-400 cursor-not-allowed'
           }`}
         >
           <span>{isRotating ? 'Passing...' : 'Pass Selected Card'}</span>
-          {!isRotating && <span className="material-symbols-outlined">arrow_forward</span>}
+          {!isRotating && selectedCardIndex !== null && (
+            <span className="material-symbols-outlined">arrow_forward</span>
+          )}
         </button>
       </div>
     </div>
