@@ -525,9 +525,10 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({ onExit }) => {
 
   return (
     <div className="relative flex h-screen w-full flex-col p-4 pt-6 overflow-hidden bg-background-dark">
+      {/* Top App Bar */}
       <div className="flex items-center justify-between pb-2">
         <div className="flex size-12 shrink-0 items-center justify-start">
-          <span className="material-symbols-outlined text-white/80 text-[28px]">style</span>
+          <span className="material-symbols-outlined text-white/80 text-[28px]">neurology</span>
         </div>
         <h2 className="text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">
           Round {currentRound}
@@ -538,15 +539,17 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({ onExit }) => {
               onClick={onExit}
               className="flex h-12 w-12 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-transparent text-white/80 hover:bg-white/10"
             >
-              <span className="material-symbols-outlined text-[28px]">close</span>
+              <span className="material-symbols-outlined text-[28px]">settings</span>
             </button>
           )}
         </div>
       </div>
 
+      {/* Main Game Board */}
       <div className="flex-1 flex flex-col items-center justify-center relative">
+        {/* Headline Text */}
         <div className="absolute top-4 text-center z-10">
-          <h2 className="text-white tracking-light text-[24px] font-bold leading-tight">
+          <h2 className="text-white tracking-light text-[28px] font-bold leading-tight">
             {isRotating ? 'Passing cards...' : 'Select a card to pass'}
           </h2>
           <p className="text-white/60 text-base font-normal leading-normal pt-1">
@@ -554,26 +557,45 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({ onExit }) => {
           </p>
         </div>
 
+        {/* Central Arrow Indicator - Clockwise rotation */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="relative w-24 h-24">
-            <span className={`material-symbols-outlined text-white/10 absolute -top-8 left-1/2 -translate-x-1/2 transition-all ${isRotating ? 'text-primary/50 animate-pulse' : ''}`} style={{ fontSize: '24px' }}>
-              arrow_upward
-            </span>
-            <span className={`material-symbols-outlined text-white/10 absolute top-1/2 -right-8 -translate-y-1/2 transition-all ${isRotating ? 'text-primary/50 animate-pulse' : ''}`} style={{ fontSize: '24px' }}>
+          <div className="relative w-32 h-32">
+            {/* Top-right arrow (from North to East) */}
+            <span 
+              className={`material-symbols-outlined absolute top-0 right-0 transition-all ${isRotating ? 'text-primary/60 animate-pulse' : 'text-white/10'}`} 
+              style={{ fontSize: '28px', transform: 'rotate(45deg)' }}
+            >
               arrow_forward
             </span>
-            <span className={`material-symbols-outlined text-white/10 absolute -bottom-8 left-1/2 -translate-x-1/2 transition-all ${isRotating ? 'text-primary/50 animate-pulse' : ''}`} style={{ fontSize: '24px' }}>
-              arrow_downward
+            {/* Bottom-right arrow (from East to South) */}
+            <span 
+              className={`material-symbols-outlined absolute bottom-0 right-0 transition-all ${isRotating ? 'text-primary/60 animate-pulse' : 'text-white/10'}`} 
+              style={{ fontSize: '28px', transform: 'rotate(135deg)' }}
+            >
+              arrow_forward
             </span>
-            <span className={`material-symbols-outlined text-white/10 absolute top-1/2 -left-8 -translate-y-1/2 transition-all ${isRotating ? 'text-primary/50 animate-pulse' : ''}`} style={{ fontSize: '24px' }}>
-              arrow_back
+            {/* Bottom-left arrow (from South to West) */}
+            <span 
+              className={`material-symbols-outlined absolute bottom-0 left-0 transition-all ${isRotating ? 'text-primary/60 animate-pulse' : 'text-white/10'}`} 
+              style={{ fontSize: '28px', transform: 'rotate(225deg)' }}
+            >
+              arrow_forward
+            </span>
+            {/* Top-left arrow (from West to North) */}
+            <span 
+              className={`material-symbols-outlined absolute top-0 left-0 transition-all ${isRotating ? 'text-primary/60 animate-pulse' : 'text-white/10'}`} 
+              style={{ fontSize: '28px', transform: 'rotate(-45deg)' }}
+            >
+              arrow_forward
             </span>
           </div>
         </div>
 
+        {/* Player Areas Layout */}
         <div className="relative w-full max-w-sm aspect-square">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-4/5">
-            <p className="text-white/60 text-sm font-normal leading-normal text-center mb-2">North</p>
+          {/* Player North (Player 3) */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4/5">
+            <p className="text-white/60 text-sm font-normal leading-normal text-center mb-2">Player 3</p>
             <div className="grid grid-cols-4 gap-2">
               {hands.north.map((_, idx) => (
                 <div key={idx} className="w-full bg-white/5 aspect-[3/4] rounded-lg border border-white/10" />
@@ -581,59 +603,64 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({ onExit }) => {
             </div>
           </div>
 
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1/3">
-            <p className="text-white/60 text-sm font-normal leading-normal text-center mb-2">West</p>
-            <div className="grid grid-cols-2 gap-1">
+          {/* Player West (Player 2) - Rotated 90 degrees */}
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-4/5 origin-center rotate-90">
+            <p className="text-white/60 text-sm font-normal leading-normal text-center mb-2 -rotate-90">Player 2</p>
+            <div className="grid grid-cols-4 gap-2">
               {hands.west.map((_, idx) => (
                 <div key={idx} className="w-full bg-white/5 aspect-[3/4] rounded-lg border border-white/10" />
               ))}
             </div>
           </div>
 
-          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1/3">
-            <p className="text-white/60 text-sm font-normal leading-normal text-center mb-2">East</p>
-            <div className="grid grid-cols-2 gap-1">
+          {/* Player East (Player 4) - Rotated -90 degrees */}
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-4/5 origin-center -rotate-90">
+            <p className="text-white/60 text-sm font-normal leading-normal text-center mb-2 rotate-90">Player 4</p>
+            <div className="grid grid-cols-4 gap-2">
               {hands.east.map((_, idx) => (
                 <div key={idx} className="w-full bg-white/5 aspect-[3/4] rounded-lg border border-white/10" />
               ))}
             </div>
           </div>
 
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full p-3 rounded-xl bg-primary/20 border-2 border-primary shadow-lg shadow-primary/20">
+          {/* Player South (You) */}
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-full p-3 rounded-xl bg-primary/20 border-2 border-primary shadow-lg shadow-primary/20">
             <p className="text-white text-base font-bold leading-normal text-center mb-3">You</p>
-            <div className="grid grid-cols-4 gap-2 px-1">
+            <div className="grid grid-cols-4 gap-2 px-2">
               {hands.south.map((card, idx) => (
-                <button
-                  key={card.id}
-                  onClick={() => !isRotating && setSelectedCardIndex(idx)}
-                  disabled={isRotating}
-                  className={`flex flex-col gap-1 cursor-pointer transition-all ${isRotating ? 'opacity-50' : ''}`}
-                >
-                  <div
-                    className={`relative w-full aspect-[3/4] rounded-lg flex items-center justify-center p-1 text-center transition-all ${
-                      CARD_COLORS[card.colorIndex].bg
-                    } ${
-                      selectedCardIndex === idx
-                        ? 'border-2 border-white ring-2 ring-white shadow-lg shadow-white/30 scale-105'
-                        : 'border-2 border-transparent hover:border-white/50'
-                    }`}
+                <div key={card.id} className="flex flex-col gap-3">
+                  <button
+                    onClick={() => !isRotating && setSelectedCardIndex(idx)}
+                    disabled={isRotating}
+                    className={`cursor-pointer transition-all ${isRotating ? 'opacity-50' : ''}`}
                   >
-                    <span className="font-bold text-white text-xs sm:text-sm leading-tight">{card.name}</span>
-                  </div>
-                </button>
+                    <div
+                      className={`relative w-full aspect-[3/4] rounded-lg flex items-center justify-center p-2 text-center transition-all ${
+                        CARD_COLORS[card.colorIndex].bg
+                      } ${
+                        selectedCardIndex === idx
+                          ? 'border-2 border-white ring-2 ring-white shadow-lg shadow-white/30 transform scale-105'
+                          : 'border-2 border-transparent hover:border-white'
+                      }`}
+                    >
+                      <span className="font-bold text-white text-sm sm:text-base leading-tight uppercase">{card.name}</span>
+                    </div>
+                  </button>
+                </div>
               ))}
             </div>
           </div>
         </div>
       </div>
 
+      {/* Action Button */}
       <div className="w-full pt-4 pb-2">
         <button
           onClick={passCards}
           disabled={selectedCardIndex === null || isRotating}
-          className={`w-full flex items-center justify-center rounded-xl h-14 gap-2 text-lg font-bold leading-normal tracking-[0.015em] transition-all ${
+          className={`w-full flex items-center justify-center rounded-xl h-14 gap-2 text-lg font-bold leading-normal tracking-[0.015em] transition-all shadow-lg ${
             selectedCardIndex !== null && !isRotating
-              ? 'bg-primary text-white shadow-lg shadow-primary/30 hover:bg-primary/90'
+              ? 'bg-primary text-white shadow-primary/30 hover:bg-primary/90'
               : 'bg-zinc-700 text-zinc-400 cursor-not-allowed'
           }`}
         >
