@@ -118,8 +118,24 @@ Preferred communication style: Simple, everyday language.
   - Used for thematic game backgrounds
   - High-quality stock photography (2K resolution)
 
+### Multiplayer Architecture
+
+**WebSocket Server**
+- **Bun runtime** with native WebSocket support for real-time multiplayer
+- Game server runs on port 3001 (`server/index.ts`)
+- Handles room creation, player joining, game synchronization
+
+**Multiplayer Components** (`src/multiplayer/`)
+- `useWebSocket.ts`: Custom hook for WebSocket connection management
+- Multiplayer screens: ModeSelectionScreen, HostGameScreen, JoinGameScreen, BrowseGamesScreen, GameLobbyScreen
+- Room-based lobby system with host controls
+
+**Vite Proxy Configuration**
+- WebSocket connections proxied from `/ws` to `ws://localhost:3001`
+- Enables seamless frontend-to-backend communication
+
 ### Hosting Platform
 - **Replit**: Configured for deployment on Replit platform
   - Special Vite configuration for Replit's networking
   - HMR proxy configuration for live updates
-  - No backend server required - pure frontend application
+  - Dual workflow: Vite dev server (port 5000) + WebSocket game server (port 3001)
