@@ -1,0 +1,151 @@
+Add "QuadMatch Royale" - a complete 4-player strategic card matching game as a React component.
+
+GAME RULES & MECHANICS:
+
+SETUP:
+- User enters 4 unique names at start
+- Create deck of 16 cards: each name appears exactly 4 times
+- Shuffle deck and deal 4 random cards to each of 4 players
+- Players positioned as: South (human), West (AI), North (AI), East (AI)
+
+ROUND FLOW:
+1. Each player selects one card from their hand to pass
+2. Human player manually selects, AI players auto-select based on strategy
+3. All selected cards rotate clockwise simultaneously:
+   - South → West
+   - West → North
+   - North → East
+   - East → South
+4. Check all hands for win condition (4 identical cards)
+5. If winner found, end game and calculate rankings
+6. If no winner, start next round
+
+AI STRATEGY (CRITICAL - IMPLEMENT THIS LOGIC):
+For each AI player selecting which card to pass, prioritize in this order:
+1. IF hand has 3-of-a-kind: NEVER pass that card type (pass the singleton)
+2. IF hand has 2-of-a-kind: Try to keep the pair, pass from the other two cards
+3. IF no matches: Pass the card type that appears least frequently in hand
+4. Tie-breaker: Pass the card received most recently (least time in hand)
+
+WIN DETECTION:
+- After each card rotation, check if any player has 4 identical cards
+- First player to achieve this wins immediately
+
+RANKING SYSTEM (when game ends):
+1st place: The winner (4-of-a-kind)
+2nd-4th place ranked by:
+   - 3-of-a-kind > 2-of-a-kind > 1-of-a-kind > no matches
+   - If tied on match level, earlier formation ranks higher
+   - Track round number when each match level was first achieved
+
+TECHNICAL REQUIREMENTS:
+- Single React functional component using useState, useEffect, useCallback
+- Tailwind CSS only for styling
+- No external dependencies beyond React
+- Self-contained, easy to integrate
+- Export as default component named "QuadMatchRoyale"
+
+COMPONENT STATE TO MANAGE:
+- gamePhase: 'setup' | 'playing' | 'gameOver'
+- playerNames: array of 4 name strings entered by user
+- hands: object with keys 'south', 'west', 'north', 'east', each holding array of 4 cards
+- selectedCard: currently selected card by human player
+- currentRound: number
+- winner: player position who won
+- rankings: final placement of all players
+- matchHistory: tracking when each player formed matches (for ranking tie-breaks)
+
+FEATURES TO IMPLEMENT:
+
+1. SETUP PHASE:
+   - 4 input fields for names with validation
+   - Start button disabled until all 4 names entered
+   - No duplicate names allowed
+   - Clear error messages
+
+2. GAME INITIALIZATION:
+   - Create deck from 4 names (4 copies each)
+   - Shuffle using Fisher-Yates algorithm
+   - Deal 4 cards to each player randomly
+   - Set South as human player
+
+3. HUMAN TURN:
+   - Display 4 cards in hand clearly
+   - Click to select one card to pass
+   - Visual highlight on selection
+   - "Pass Card" button becomes active after selection
+   - Show which card will go to West player
+
+4. AI TURN (simultaneous):
+   - Implement AI strategy logic exactly as specified above
+   - Process instantly (no artificial delay needed)
+   - Don't reveal AI selections until rotation phase
+
+5. CARD ROTATION PHASE:
+   - Animate cards moving clockwise
+   - Update all hands simultaneously
+   - 500ms animation duration
+   - Show card flow visually
+
+6. WIN CHECK:
+   - After each rotation, check all 4 hands
+   - If any player has 4 identical cards, trigger win
+   - Calculate rankings for all players
+   - Display results screen
+
+7. RESULTS SCREEN:
+   - Show winner with celebration
+   - Display final rankings with reasoning:
+     * Show each player's final hand
+     * Show match type (4-of-a-kind, 3-of-a-kind, etc.)
+   - Game statistics (rounds played)
+   - "Play Again" button (keeps same names)
+   - "New Game" button (enter new names)
+
+UI LAYOUT:
+- Compass layout: South (bottom), West (left), North (top), East (right)
+- South player: cards face-up, large and interactive
+- AI players: cards face-down, smaller, show card backs
+- Central area: round counter, game status, action prompts
+- Smooth transitions between all game states
+
+VISUAL DESIGN:
+- Each name type gets unique color/style
+- Cards are large, readable, with clear names
+- Selected card has distinct highlight
+- Card movement animations are smooth
+- Win celebration is prominent
+- Modern, clean card game aesthetic
+- Mobile responsive (stack vertically if needed)
+
+GAME FLOW TIMING:
+- Human selection: wait for player input
+- AI selection: instant (calculated immediately)
+- Card rotation: 500ms animation
+- Win check: immediate after rotation
+- Round increment: automatic if no winner
+- Next round starts immediately
+
+EDGE CASES TO HANDLE:
+- Prevent clicking during card rotation animation
+- Ensure shuffle creates valid solvable game
+- Handle multiple players achieving same match level
+- Track formation timing for tie-breaking
+- Validate all 4 names are unique and non-empty
+- Disable card selection during AI turns
+
+CODE QUALITY:
+- Clear function names explaining game logic
+- Comments on AI strategy implementation
+- Separated concerns (game logic vs UI)
+- Easy to modify card/player count
+- Reusable helper functions
+- Well-organized state management
+
+PERFORMANCE:
+- Efficient re-renders (use React.memo if needed)
+- Smooth 60fps animations
+- No lag during AI calculations
+- Quick game reset
+
+Provide complete, production-ready code that I can immediately integrate into my React web app. Make it addictive, fast-paced, and strategically interesting.

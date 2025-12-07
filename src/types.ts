@@ -29,7 +29,8 @@ export enum GameId {
   SLIDING_PUZZLE = 'SLIDING_PUZZLE',
   SPACE_RACE = 'SPACE_RACE',
   CASTLE_SIEGE = 'CASTLE_SIEGE',
-  COLOR_WAR = 'COLOR_WAR'
+  COLOR_WAR = 'COLOR_WAR',
+  QUAD_MATCH = 'QUAD_MATCH'
 }
 
 export interface GameDefinition {

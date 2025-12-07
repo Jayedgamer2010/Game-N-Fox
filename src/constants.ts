@@ -113,5 +113,21 @@ export const GAMES: Record<GameId, GameDefinition> = {
     backgroundImage: "https://images.unsplash.com/photo-1599553733229-359f2d0496be?q=80&w=2070&auto=format&fit=crop",
     themeColor: "#C0392B",
     isComingSoon: true
+  },
+  [GameId.QUAD_MATCH]: {
+    id: GameId.QUAD_MATCH,
+    title: "QuadMatch Royale",
+    description: "Match 4 cards to win! Strategic passing.",
+    roles: ['South', 'West', 'North', 'East'],
+    playerCount: 4,
+    points: {
+      '1st': 1000,
+      '2nd': 600,
+      '3rd': 300,
+      '4th': 0
+    },
+    hasInteractionPhase: true,
+    backgroundImage: "https://images.unsplash.com/photo-1529480780361-266757d87a49?q=80&w=2070&auto=format&fit=crop",
+    themeColor: "#2b6cee"
   }
 };
