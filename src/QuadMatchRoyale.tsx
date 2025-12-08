@@ -105,6 +105,10 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
   const [nameError, setNameError] = useState<string | null>(null);
   const [activePreset, setActivePreset] = useState<string | null>(null);
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
+  const [waitingForPlayers, setWaitingForPlayers] = useState(false);
+  const [playerSelections, setPlayerSelections] = useState<Record<Position, boolean>>({
+    south: false, west: false, north: false, east: false
+  });
   
   const pendingSelectionsRef = useRef<Record<Position, number | null>>({
     south: null, west: null, north: null, east: null
@@ -112,6 +116,8 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
   const isHostRef = useRef(isHost);
   const executeCardPassRef = useRef<((selections: Record<Position, number>) => void) | null>(null);
   const autoStartTriggeredRef = useRef(false);
+  const pendingActionsRef = useRef<Array<{ action: string; data: any }>>([]);
+  const callbackRegisteredRef = useRef(false);
 
   useEffect(() => {
     isHostRef.current = isHost;
@@ -154,40 +160,44 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
     }));
   }, [currentRound]);
 
-  useEffect(() => {
-    if (!isMultiplayer || !onGameAction) return;
+  const processGameAction = useCallback((payload: { action: string; data: any }) => {
+    const { action, data } = payload;
+    
+    switch (action) {
+      case 'quadmatch_game_started':
+        setHands(data.hands);
+        setPlayerNames(data.playerNames);
+        setCurrentRound(1);
+        setSelectedCardIndex(null);
+        setWinner(null);
+        setRankings([]);
+        setMatchHistory([]);
+        setWaitingForPlayers(false);
+        setPlayerSelections({ south: false, west: false, north: false, east: false });
+        pendingSelectionsRef.current = { south: null, west: null, north: null, east: null };
+        setGamePhase('playing');
+        break;
 
-    const handleAction = (payload: { action: string; data: any }) => {
-      const { action, data } = payload;
-      
-      switch (action) {
-        case 'quadmatch_game_started':
-          setHands(data.hands);
-          setPlayerNames(data.playerNames);
-          setCurrentRound(1);
-          setSelectedCardIndex(null);
-          setWinner(null);
-          setRankings([]);
-          setMatchHistory([]);
-          pendingSelectionsRef.current = { south: null, west: null, north: null, east: null };
-          setGamePhase('playing');
-          break;
+      case 'quadmatch_card_selected':
+        pendingSelectionsRef.current[data.position as Position] = data.cardIndex;
+        setPlayerSelections(prev => ({ ...prev, [data.position]: true }));
+        const allSelected = POSITIONS.every(p => 
+          pendingSelectionsRef.current[p] !== null
+        );
+        if (allSelected && isHostRef.current && executeCardPassRef.current) {
+          executeCardPassRef.current(pendingSelectionsRef.current as Record<Position, number>);
+        }
+        break;
 
-        case 'quadmatch_card_selected':
-          pendingSelectionsRef.current[data.position as Position] = data.cardIndex;
-          const allSelected = POSITIONS.every(p => 
-            pendingSelectionsRef.current[p] !== null
-          );
-          if (allSelected && isHostRef.current && executeCardPassRef.current) {
-            executeCardPassRef.current(pendingSelectionsRef.current as Record<Position, number>);
-          }
-          break;
-
-        case 'quadmatch_cards_passed':
+      case 'quadmatch_cards_passed':
+        setGamePhase('rotating');
+        setTimeout(() => {
           setHands(data.newHands);
           setCurrentRound(data.currentRound);
           setMatchHistory(data.matchHistory);
           setSelectedCardIndex(null);
+          setWaitingForPlayers(false);
+          setPlayerSelections({ south: false, west: false, north: false, east: false });
           pendingSelectionsRef.current = { south: null, west: null, north: null, east: null };
           if (data.winner) {
             setWinner(data.winner);
@@ -196,23 +206,39 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
           } else {
             setGamePhase('playing');
           }
-          break;
+        }, 800);
+        break;
 
-        case 'quadmatch_play_again':
-          setHands(data.hands);
-          setCurrentRound(1);
-          setSelectedCardIndex(null);
-          setWinner(null);
-          setRankings([]);
-          setMatchHistory([]);
-          pendingSelectionsRef.current = { south: null, west: null, north: null, east: null };
-          setGamePhase('playing');
-          break;
-      }
+      case 'quadmatch_play_again':
+        setHands(data.hands);
+        setCurrentRound(1);
+        setSelectedCardIndex(null);
+        setWinner(null);
+        setRankings([]);
+        setMatchHistory([]);
+        setWaitingForPlayers(false);
+        setPlayerSelections({ south: false, west: false, north: false, east: false });
+        pendingSelectionsRef.current = { south: null, west: null, north: null, east: null };
+        setGamePhase('playing');
+        break;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isMultiplayer || !onGameAction) return;
+
+    const handleAction = (payload: { action: string; data: any }) => {
+      processGameAction(payload);
     };
 
     onGameAction(handleAction);
-  }, [isMultiplayer, onGameAction]);
+    callbackRegisteredRef.current = true;
+    
+    if (pendingActionsRef.current.length > 0) {
+      pendingActionsRef.current.forEach(action => processGameAction(action));
+      pendingActionsRef.current = [];
+    }
+  }, [isMultiplayer, onGameAction, processGameAction]);
 
   useEffect(() => {
     if (isMultiplayer && gamePhase === 'setup' && isHost && !autoStartTriggeredRef.current) {
@@ -250,8 +276,11 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
         setWinner(null);
         setRankings([]);
         setMatchHistory([]);
+        setWaitingForPlayers(false);
+        setPlayerSelections({ south: false, west: false, north: false, east: false });
+        pendingSelectionsRef.current = { south: null, west: null, north: null, east: null };
         setGamePhase('playing');
-      }, 100);
+      }, 500);
       
       return () => clearTimeout(timeoutId);
     }
@@ -355,6 +384,7 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
 
   const executeCardPass = useCallback((selections: Record<Position, number>) => {
     setGamePhase('rotating');
+    setWaitingForPlayers(false);
 
     setTimeout(() => {
       const newHands: Record<Position, Card[]> = {
@@ -405,6 +435,7 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
       setHands(newHands);
       setSelectedCardIndex(null);
       setMatchHistory(newHistory);
+      setPlayerSelections({ south: false, west: false, north: false, east: false });
       pendingSelectionsRef.current = { south: null, west: null, north: null, east: null };
 
       if (winnerPos) {
@@ -415,7 +446,7 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
         setCurrentRound(prev => prev + 1);
         setGamePhase('playing');
       }
-    }, 500);
+    }, 800);
   }, [hands, matchHistory, currentRound, checkForWinner, calculateRankings, isMultiplayer, sendGameAction]);
 
   useEffect(() => {
@@ -428,9 +459,12 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
     if (isMultiplayer && sendGameAction) {
       sendGameAction('quadmatch_card_selected', { position: myPosition, cardIndex: selectedCardIndex });
       pendingSelectionsRef.current[myPosition] = selectedCardIndex;
+      setPlayerSelections(prev => ({ ...prev, [myPosition]: true }));
+      setWaitingForPlayers(true);
       
       const allSelected = POSITIONS.every(p => pendingSelectionsRef.current[p] !== null);
       if (allSelected && isHostRef.current) {
+        setWaitingForPlayers(false);
         executeCardPass(pendingSelectionsRef.current as Record<Position, number>);
       }
       return;
@@ -672,6 +706,44 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
 
   if (gamePhase === 'playing' || gamePhase === 'rotating') {
     const isRotating = gamePhase === 'rotating';
+    const hasSubmittedSelection = isMultiplayer && waitingForPlayers && playerSelections[myPosition];
+    const canSelectCards = !isRotating && !hasSubmittedSelection;
+    
+    const getStatusMessage = () => {
+      if (isRotating) return 'Passing cards...';
+      if (hasSubmittedSelection) return 'Waiting for other players...';
+      return 'Select a card to pass';
+    };
+
+    const getStatusSubMessage = () => {
+      if (isRotating) return 'Cards rotating clockwise';
+      if (hasSubmittedSelection) {
+        const waitingCount = POSITIONS.filter(p => !playerSelections[p]).length;
+        return `${waitingCount} player${waitingCount !== 1 ? 's' : ''} still choosing`;
+      }
+      return 'Your Turn';
+    };
+
+    const renderPlayerSection = (position: Position, positionClasses: string, gridClasses: string) => {
+      const isReady = playerSelections[position];
+      return (
+        <div className={positionClasses}>
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <p className="text-white/60 text-sm font-normal leading-normal text-center">{getPositionLabel(position)}</p>
+            {isMultiplayer && isReady && (
+              <span className="material-symbols-outlined text-green-400 text-sm animate-pulse">check_circle</span>
+            )}
+          </div>
+          <div className={`grid ${gridClasses} transition-all duration-300 ${isRotating ? 'opacity-50 scale-95' : ''}`}>
+            {hands[position].map((_, idx) => (
+              <div key={idx} className={`transition-transform duration-500 ${isRotating ? 'animate-pulse' : ''}`}>
+                {renderCardBack()}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    };
     
     return (
       <div className="relative flex h-screen w-full flex-col bg-[#101622] p-4 pt-6 overflow-hidden">
@@ -693,57 +765,45 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
 
         <div className="flex-1 flex flex-col items-center justify-center relative">
           <div className="absolute top-4 text-center z-10">
-            <h2 className="text-white tracking-light text-[28px] font-bold leading-tight">
-              {isRotating ? 'Passing cards...' : 'Select a card to pass'}
+            <h2 className={`text-white tracking-light text-[28px] font-bold leading-tight transition-all ${hasSubmittedSelection ? 'animate-pulse' : ''}`}>
+              {getStatusMessage()}
             </h2>
             <p className="text-white/60 text-base font-normal leading-normal pt-1">
-              {isRotating ? 'Cards rotating clockwise' : 'Your Turn'}
+              {getStatusSubMessage()}
             </p>
           </div>
 
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="relative w-24 h-24">
-              <span className={`material-symbols-outlined text-white/10 absolute top-0 left-1/2 ${isRotating ? 'animate-pulse text-white/30' : ''}`} style={{ fontSize: '32px', transform: 'translateX(-50%) translateY(-100%) rotate(-90deg)' }}>arrow_forward</span>
-              <span className={`material-symbols-outlined text-white/10 absolute bottom-0 left-1/2 ${isRotating ? 'animate-pulse text-white/30' : ''}`} style={{ fontSize: '32px', transform: 'translateX(-50%) translateY(100%) rotate(90deg)' }}>arrow_forward</span>
-              <span className={`material-symbols-outlined text-white/10 absolute top-1/2 left-0 ${isRotating ? 'animate-pulse text-white/30' : ''}`} style={{ fontSize: '32px', transform: 'translateY(-50%) translateX(-100%) rotate(180deg)' }}>arrow_forward</span>
-              <span className={`material-symbols-outlined text-white/10 absolute top-1/2 right-0 ${isRotating ? 'animate-pulse text-white/30' : ''}`} style={{ fontSize: '32px', transform: 'translateY(-50%) translateX(100%)' }}>arrow_forward</span>
+            <div className={`relative w-24 h-24 transition-all duration-500 ${isRotating ? 'animate-spin' : ''}`} style={{ animationDuration: '2s' }}>
+              <span className={`material-symbols-outlined absolute top-0 left-1/2 transition-all duration-300 ${isRotating ? 'text-[#2b6cee] animate-pulse' : 'text-white/10'}`} style={{ fontSize: '32px', transform: 'translateX(-50%) translateY(-100%) rotate(-90deg)' }}>arrow_forward</span>
+              <span className={`material-symbols-outlined absolute bottom-0 left-1/2 transition-all duration-300 ${isRotating ? 'text-[#2b6cee] animate-pulse' : 'text-white/10'}`} style={{ fontSize: '32px', transform: 'translateX(-50%) translateY(100%) rotate(90deg)' }}>arrow_forward</span>
+              <span className={`material-symbols-outlined absolute top-1/2 left-0 transition-all duration-300 ${isRotating ? 'text-[#2b6cee] animate-pulse' : 'text-white/10'}`} style={{ fontSize: '32px', transform: 'translateY(-50%) translateX(-100%) rotate(180deg)' }}>arrow_forward</span>
+              <span className={`material-symbols-outlined absolute top-1/2 right-0 transition-all duration-300 ${isRotating ? 'text-[#2b6cee] animate-pulse' : 'text-white/10'}`} style={{ fontSize: '32px', transform: 'translateY(-50%) translateX(100%)' }}>arrow_forward</span>
             </div>
           </div>
 
           <div className="relative w-full aspect-square max-w-sm">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4/5">
-              <p className="text-white/60 text-sm font-normal leading-normal text-center mb-2">{getPositionLabel('north')}</p>
-              <div className="grid grid-cols-4 gap-2">
-                {hands.north.map((_, idx) => (
-                  <div key={idx}>{renderCardBack()}</div>
-                ))}
-              </div>
-            </div>
+            {renderPlayerSection('north', 'absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4/5', 'grid-cols-4 gap-2')}
+            {renderPlayerSection('west', 'absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/3 w-3/5', 'grid-cols-4 gap-1')}
+            {renderPlayerSection('east', 'absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/3 w-3/5', 'grid-cols-4 gap-1')}
 
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/3 w-3/5">
-              <p className="text-white/60 text-sm font-normal leading-normal text-center mb-2">{getPositionLabel('west')}</p>
-              <div className="grid grid-cols-4 gap-1">
-                {hands.west.map((_, idx) => (
-                  <div key={idx}>{renderCardBack()}</div>
-                ))}
+            <div className={`absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-full p-3 rounded-xl transition-all duration-300 ${
+              hasSubmittedSelection 
+                ? 'bg-green-500/20 border-2 border-green-500 shadow-lg shadow-green-500/20' 
+                : 'bg-[#2b6cee]/20 border-2 border-[#2b6cee] shadow-lg shadow-[#2b6cee]/20'
+            } ${isRotating ? 'opacity-70 scale-95' : ''}`}>
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <p className="text-white text-base font-bold leading-normal text-center">{getPositionLabel('south')}</p>
+                {hasSubmittedSelection && (
+                  <span className="material-symbols-outlined text-green-400 text-lg">check_circle</span>
+                )}
               </div>
-            </div>
-
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/3 w-3/5">
-              <p className="text-white/60 text-sm font-normal leading-normal text-center mb-2">{getPositionLabel('east')}</p>
-              <div className="grid grid-cols-4 gap-1">
-                {hands.east.map((_, idx) => (
-                  <div key={idx}>{renderCardBack()}</div>
-                ))}
-              </div>
-            </div>
-
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-full p-3 rounded-xl bg-[#2b6cee]/20 border-2 border-[#2b6cee] shadow-lg shadow-[#2b6cee]/20">
-              <p className="text-white text-base font-bold leading-normal text-center mb-3">{getPositionLabel('south')}</p>
               <div className="grid grid-cols-4 gap-2 px-2">
                 {hands.south.map((card, idx) => (
-                  <div key={card.id} className="flex flex-col gap-3">
-                    {renderCard(card, idx, !isRotating, selectedCardIndex === idx)}
+                  <div key={card.id} className={`flex flex-col gap-3 transition-all duration-300 ${
+                    isRotating ? 'animate-pulse' : ''
+                  } ${hasSubmittedSelection && selectedCardIndex === idx ? 'ring-2 ring-green-400 rounded-lg' : ''}`}>
+                    {renderCard(card, idx, canSelectCards, selectedCardIndex === idx)}
                   </div>
                 ))}
               </div>
@@ -754,15 +814,31 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
         <div className="w-full pt-4 pb-2">
           <button
             onClick={passCards}
-            disabled={selectedCardIndex === null || isRotating}
+            disabled={selectedCardIndex === null || isRotating || hasSubmittedSelection}
             className={`w-full flex items-center justify-center rounded-xl h-14 gap-2 text-lg font-bold leading-normal tracking-[0.015em] transition-all ${
-              selectedCardIndex !== null && !isRotating
-                ? 'bg-[#2b6cee] text-white shadow-lg shadow-[#2b6cee]/30 hover:bg-[#2b6cee]/90'
-                : 'bg-gray-700 text-gray-400 cursor-not-allowed'
+              hasSubmittedSelection
+                ? 'bg-green-600 text-white cursor-not-allowed'
+                : selectedCardIndex !== null && !isRotating
+                  ? 'bg-[#2b6cee] text-white shadow-lg shadow-[#2b6cee]/30 hover:bg-[#2b6cee]/90'
+                  : 'bg-gray-700 text-gray-400 cursor-not-allowed'
             }`}
           >
-            <span>{isRotating ? 'Passing...' : 'Pass Selected Card'}</span>
-            {!isRotating && <span className="material-symbols-outlined">arrow_forward</span>}
+            {hasSubmittedSelection ? (
+              <>
+                <span className="material-symbols-outlined animate-spin">sync</span>
+                <span>Waiting for others...</span>
+              </>
+            ) : isRotating ? (
+              <>
+                <span className="material-symbols-outlined animate-spin">rotate_right</span>
+                <span>Passing...</span>
+              </>
+            ) : (
+              <>
+                <span>Pass Selected Card</span>
+                <span className="material-symbols-outlined">arrow_forward</span>
+              </>
+            )}
           </button>
         </div>
       </div>
