@@ -6,6 +6,14 @@ This project is a multiplayer party game built with React and TypeScript, design
 
 The application is a single-page application (SPA) with distinct game phases including player setup, role assignment, active gameplay, and results displays. It incorporates immersive audio (background music and sound effects), animated transitions, and a dark-themed user interface. The ambition is to provide an engaging, competitive party game experience with a polished presentation.
 
+## Recent Changes
+
+**December 8, 2025:**
+- Fixed critical UI bug in QuadMatch Royale multiplayer mode where the wrong game interface was displayed
+- Issue: When starting an online multiplayer game for QuadMatch Royale, the game was incorrectly showing the "Thief and Police" style 4-player card grid (light theme with Player 1-4 cards showing points) instead of the proper QuadMatch Royale dark-themed card passing interface
+- Root cause: The multiplayer game start logic was unconditionally setting the game phase to `ASSIGN_ROLES` for all games, which is correct for role-based games but not for QuadMatch Royale
+- Fix: Modified `App.tsx` to check if the game is QuadMatch Royale and route to `SETUP` phase instead, allowing the dedicated `QuadMatchRoyale` component to render with its proper dark-themed UI
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
