@@ -169,3 +169,27 @@ Preferred communication style: Simple, everyday language.
 - **Card set names display**: Added actual card set names (Fruit cards, Animal cards, etc.) instead of generic "Card Set" labels
 - **Player name presentation**: Enhanced player name display with proper positioning and styling
 - **Preserved game logic**: All AI opponent logic and win condition detection remains intact
+
+## Recent Changes (December 8, 2024)
+
+### Thief and Police Multiplayer Implementation
+- **Host-only role assignment**: Only the host assigns roles and broadcasts them via `thief_police_round_start` WebSocket action to prevent race conditions
+- **Police task sync**: Added `thief_police_task_revealed` and `thief_police_task_done` actions to sync police task reveal phase across all players
+- **Police selection sync**: Added `thief_police_selection` action to broadcast when police selects a target player
+- **Verdict sync**: Added `thief_police_verdict` action to sync the verdict result (correct/incorrect guess) and updated player scores
+- **Round results sync**: Added `thief_police_round_results` and `thief_police_next_round` actions for round transitions
+- **Host detection**: Uses `isHostRef` to track if current player is the room host, preventing non-hosts from assigning roles
+
+### QuadMatch Royale Multiplayer Implementation
+- **Multiplayer props**: Added `isMultiplayer`, `sendGameAction`, `myPosition`, `isHost`, and `onGameAction` props to QuadMatchRoyale component
+- **Game start broadcast**: Host broadcasts `quadmatch_game_started` with initial hands and player names to all players
+- **Card selection sync**: Players broadcast `quadmatch_card_selected` when selecting a card to pass; host tracks all selections via `pendingSelectionsRef`
+- **Card pass execution**: When all 4 players have selected, host executes card pass and broadcasts `quadmatch_cards_passed` with new hands, winner, and rankings
+- **Play again sync**: Added `quadmatch_play_again` action for synchronized game restart
+- **Stale closure fix**: Uses `executeCardPassRef` to store latest function reference, preventing stale closures in WebSocket callbacks
+- **Host tracking fix**: Added `isHost` prop from App.tsx based on `room.hostId === playerId` comparison, with `isHostRef` updated via useEffect
+
+### Technical Improvements
+- **Ref-based callback pattern**: QuadMatchRoyale uses `quadMatchActionCallbackRef` in App.tsx to receive game actions from WebSocket handler
+- **Position mapping**: Added `getMyQuadMatchPosition()` function to map player index (0-3) to compass positions (south/west/north/east)
+- **Host detection consistency**: Both Thief & Police and QuadMatch use consistent host detection via room.hostId comparison
