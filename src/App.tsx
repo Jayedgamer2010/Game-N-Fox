@@ -845,16 +845,19 @@ const App: React.FC = () => {
               isAi: isAi,
             };
           });
+          const targetPhase = gameState.gameId === GameId.QUAD_MATCH 
+            ? GamePhase.SETUP 
+            : GamePhase.ASSIGN_ROLES;
           setGameState(prev => ({
             ...prev,
             players: newPlayers,
-            phase: GamePhase.ASSIGN_ROLES,
+            phase: targetPhase,
             currentRound: 1,
           }));
         }
       }
     }
-  }, [multiplayerState.room, gameState.phase, multiplayerState.playerId]);
+  }, [multiplayerState.room, gameState.phase, multiplayerState.playerId, gameState.gameId]);
 
   const handleGoHome = () => {
     if (isMultiplayerMode) {
