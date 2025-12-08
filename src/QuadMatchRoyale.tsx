@@ -103,6 +103,7 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
   });
   const isHostRef = useRef(isHost);
   const executeCardPassRef = useRef<((selections: Record<Position, number>) => void) | null>(null);
+  const autoStartTriggeredRef = useRef(false);
 
   useEffect(() => {
     isHostRef.current = isHost;
@@ -171,6 +172,57 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
 
     onGameAction(handleAction);
   }, [isMultiplayer, onGameAction]);
+
+  useEffect(() => {
+    if (isMultiplayer && gamePhase === 'setup' && isHost && !autoStartTriggeredRef.current) {
+      autoStartTriggeredRef.current = true;
+      
+      const presetNames = ['Lion', 'Tiger', 'Eagle', 'Wolf'];
+      
+      const createMultiplayerDeck = (): Card[] => {
+        const deck: Card[] = [];
+        presetNames.forEach((name, colorIndex) => {
+          for (let i = 0; i < 4; i++) {
+            deck.push({
+              id: `${name}-${i}`,
+              name: name.trim(),
+              colorIndex,
+            });
+          }
+        });
+        return shuffleArray(deck);
+      };
+      
+      const timeoutId = setTimeout(() => {
+        const deck = createMultiplayerDeck();
+        const newHands: Record<Position, Card[]> = {
+          south: deck.slice(0, 4),
+          west: deck.slice(4, 8),
+          north: deck.slice(8, 12),
+          east: deck.slice(12, 16),
+        };
+        
+        if (sendGameAction) {
+          sendGameAction('quadmatch_game_started', {
+            hands: newHands,
+            playerNames: presetNames,
+          });
+        }
+        
+        setPlayerNames(presetNames);
+        setHands(newHands);
+        setCurrentRound(1);
+        setSelectedCardIndex(null);
+        setWinner(null);
+        setRankings([]);
+        setMatchHistory([]);
+        cardReceivedRef.current = { south: 0, west: 0, north: 0, east: 0 };
+        setGamePhase('playing');
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isMultiplayer, isHost, gamePhase, sendGameAction]);
   
   const positionLabels: Record<Position, string> = {
     south: 'You (South)',
@@ -509,6 +561,27 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
   const canStart = playerNames.every(n => n.trim() !== '') && new Set(playerNames.map(n => n.trim().toLowerCase())).size === 4;
 
   if (gamePhase === 'setup') {
+    if (isMultiplayer && !isHost) {
+      return (
+        <div className="relative flex min-h-screen w-full flex-col items-center justify-center bg-background-dark p-4">
+          <div className="text-center">
+            <span className="material-symbols-outlined text-6xl text-primary animate-pulse">hourglass_empty</span>
+            <h1 className="text-white text-2xl font-bold mt-4">Waiting for Host</h1>
+            <p className="text-zinc-400 mt-2">The host is setting up the game...</p>
+            {onExit && (
+              <button
+                onClick={onExit}
+                className="mt-6 flex items-center justify-center gap-2 rounded-xl bg-zinc-700 px-6 py-3 text-white hover:bg-zinc-600 transition-colors"
+              >
+                <span className="material-symbols-outlined">arrow_back</span>
+                Leave Game
+              </button>
+            )}
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="relative flex min-h-screen w-full flex-col items-center bg-background-dark overflow-x-hidden p-4">
         <div className="w-full max-w-md mx-auto">
