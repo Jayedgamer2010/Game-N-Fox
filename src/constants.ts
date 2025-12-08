@@ -96,8 +96,7 @@ export const GAMES: Record<GameId, GameDefinition> = {
     },
     hasInteractionPhase: false,
     backgroundImage: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop",
-    themeColor: "#8E44AD",
-    isComingSoon: true
+    themeColor: "#8E44AD"
   },
   [GameId.CASTLE_SIEGE]: {
     id: GameId.CASTLE_SIEGE,

@@ -24,10 +24,10 @@ interface PlayerRanking {
 }
 
 const CARD_COLORS = [
-  { bg: 'bg-rose-700', border: 'border-rose-500', text: 'text-rose-100' },
-  { bg: 'bg-blue-700', border: 'border-blue-500', text: 'text-blue-100' },
-  { bg: 'bg-emerald-700', border: 'border-emerald-500', text: 'text-emerald-100' },
-  { bg: 'bg-purple-700', border: 'border-purple-500', text: 'text-purple-100' },
+  { bg: 'bg-rose-800', border: 'border-rose-600', text: 'text-white', hex: '#9f1239' },
+  { bg: 'bg-blue-800', border: 'border-blue-600', text: 'text-white', hex: '#1e40af' },
+  { bg: 'bg-emerald-800', border: 'border-emerald-600', text: 'text-white', hex: '#065f46' },
+  { bg: 'bg-purple-800', border: 'border-purple-600', text: 'text-white', hex: '#581c87' },
 ];
 
 const PRESET_THEMES = {
@@ -61,6 +61,15 @@ const getMatchTypeName = (level: number): string => {
     case 2: return '2-of-a-kind';
     default: return 'No matches';
   }
+};
+
+const POSITIONS: Position[] = ['south', 'west', 'north', 'east'];
+
+const POSITION_LABELS: Record<Position, string> = {
+  south: 'You',
+  west: 'Player 2',
+  north: 'Player 3',
+  east: 'Player 4',
 };
 
 interface QuadMatchRoyaleProps {
@@ -109,7 +118,42 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
     isHostRef.current = isHost;
   }, [isHost]);
 
-  const positions: Position[] = ['south', 'west', 'north', 'east'];
+  const checkForWinner = useCallback((currentHands: Record<Position, Card[]>): Position | null => {
+    for (const pos of POSITIONS) {
+      if (getMatchLevel(currentHands[pos]) === 4) {
+        return pos;
+      }
+    }
+    return null;
+  }, []);
+
+  const calculateRankings = useCallback((currentHands: Record<Position, Card[]>, winnerPos: Position, history: MatchHistory[]): PlayerRanking[] => {
+    const allRankings = POSITIONS.map(pos => {
+      const level = getMatchLevel(currentHands[pos]);
+      const historyEntry = history.find(h => h.position === pos && h.matchLevel === level);
+      return {
+        position: pos,
+        name: POSITION_LABELS[pos],
+        matchLevel: level,
+        firstAchieved: historyEntry?.round || currentRound,
+        hand: currentHands[pos],
+        matchType: getMatchTypeName(level),
+        place: 0,
+      };
+    });
+
+    allRankings.sort((a, b) => {
+      if (a.position === winnerPos) return -1;
+      if (b.position === winnerPos) return 1;
+      if (b.matchLevel !== a.matchLevel) return b.matchLevel - a.matchLevel;
+      return a.firstAchieved - b.firstAchieved;
+    });
+
+    return allRankings.map((r, idx) => ({
+      ...r,
+      place: idx + 1,
+    }));
+  }, [currentRound]);
 
   useEffect(() => {
     if (!isMultiplayer || !onGameAction) return;
@@ -133,7 +177,7 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
 
         case 'quadmatch_card_selected':
           pendingSelectionsRef.current[data.position as Position] = data.cardIndex;
-          const allSelected = positions.every(p => 
+          const allSelected = POSITIONS.every(p => 
             pendingSelectionsRef.current[p] !== null
           );
           if (allSelected && isHostRef.current && executeCardPassRef.current) {
@@ -223,13 +267,6 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
       return () => clearTimeout(timeoutId);
     }
   }, [isMultiplayer, isHost, gamePhase, sendGameAction]);
-  
-  const positionLabels: Record<Position, string> = {
-    south: 'You (South)',
-    west: 'West',
-    north: 'North',
-    east: 'East',
-  };
 
   const handleNameChange = (index: number, value: string) => {
     const newNames = [...playerNames];
@@ -330,7 +367,7 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
 
       if (winnerPos) {
         newHistory = [...matchHistory];
-        positions.forEach(pos => {
+        POSITIONS.forEach(pos => {
           const level = getMatchLevel(newHands[pos]);
           const existingEntry = newHistory.find(h => h.position === pos && h.matchLevel === level);
           if (!existingEntry && level >= 2) {
@@ -340,7 +377,7 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
         finalRankings = calculateRankings(newHands, winnerPos, newHistory);
       } else {
         const updatedHistory: MatchHistory[] = [...matchHistory];
-        positions.forEach(pos => {
+        POSITIONS.forEach(pos => {
           const level = getMatchLevel(newHands[pos]);
           const existingEntry = updatedHistory.find(h => h.position === pos && h.matchLevel === level);
           if (!existingEntry && level >= 2) {
@@ -375,13 +412,13 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
         setGamePhase('playing');
       }
     }, 500);
-  }, [hands, matchHistory, currentRound, checkForWinner, calculateRankings, positions, isMultiplayer, sendGameAction]);
+  }, [hands, matchHistory, currentRound, checkForWinner, calculateRankings, isMultiplayer, sendGameAction]);
 
   useEffect(() => {
     executeCardPassRef.current = executeCardPass;
   }, [executeCardPass]);
 
-  const getAICardToPass = useCallback((hand: Card[], position: Position): number => {
+  const getAICardToPass = useCallback((hand: Card[]): number => {
     const counts: Record<string, number> = {};
     hand.forEach(card => {
       counts[card.name] = (counts[card.name] || 0) + 1;
@@ -410,19 +447,10 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
     return leastCommon[Math.floor(Math.random() * leastCommon.length)].idx;
   }, []);
 
-  const checkForWinner = useCallback((currentHands: Record<Position, Card[]>): Position | null => {
-    for (const pos of positions) {
-      if (getMatchLevel(currentHands[pos]) === 4) {
-        return pos;
-      }
-    }
-    return null;
-  }, [positions]);
-
   const updateMatchHistory = useCallback((currentHands: Record<Position, Card[]>, round: number) => {
     const newHistory: MatchHistory[] = [...matchHistory];
     
-    positions.forEach(pos => {
+    POSITIONS.forEach(pos => {
       const level = getMatchLevel(currentHands[pos]);
       const existingEntry = newHistory.find(h => h.position === pos && h.matchLevel === level);
       if (!existingEntry && level >= 2) {
@@ -432,35 +460,7 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
     
     setMatchHistory(newHistory);
     return newHistory;
-  }, [matchHistory, positions]);
-
-  const calculateRankings = useCallback((currentHands: Record<Position, Card[]>, winnerPos: Position, history: MatchHistory[]): PlayerRanking[] => {
-    const allRankings = positions.map(pos => {
-      const level = getMatchLevel(currentHands[pos]);
-      const historyEntry = history.find(h => h.position === pos && h.matchLevel === level);
-      return {
-        position: pos,
-        name: positionLabels[pos],
-        matchLevel: level,
-        firstAchieved: historyEntry?.round || currentRound,
-        hand: currentHands[pos],
-        matchType: getMatchTypeName(level),
-        place: 0,
-      };
-    });
-
-    allRankings.sort((a, b) => {
-      if (a.position === winnerPos) return -1;
-      if (b.position === winnerPos) return 1;
-      if (b.matchLevel !== a.matchLevel) return b.matchLevel - a.matchLevel;
-      return a.firstAchieved - b.firstAchieved;
-    });
-
-    return allRankings.map((r, idx) => ({
-      ...r,
-      place: idx + 1,
-    }));
-  }, [currentRound, positions, positionLabels]);
+  }, [matchHistory]);
 
   const passCards = useCallback(() => {
     if (selectedCardIndex === null) return;
@@ -472,7 +472,7 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
       });
       pendingSelectionsRef.current[myPosition] = selectedCardIndex;
       
-      const allSelected = positions.every(p => 
+      const allSelected = POSITIONS.every(p => 
         pendingSelectionsRef.current[p] !== null
       );
       if (allSelected && isHostRef.current) {
@@ -485,9 +485,9 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
 
     const aiSelections: Record<Position, number> = {
       south: selectedCardIndex,
-      west: getAICardToPass(hands.west, 'west'),
-      north: getAICardToPass(hands.north, 'north'),
-      east: getAICardToPass(hands.east, 'east'),
+      west: getAICardToPass(hands.west),
+      north: getAICardToPass(hands.north),
+      east: getAICardToPass(hands.east),
     };
 
     setTimeout(() => {
@@ -526,7 +526,7 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
         setGamePhase('playing');
       }
     }, 500);
-  }, [selectedCardIndex, hands, getAICardToPass, checkForWinner, updateMatchHistory, calculateRankings, currentRound, isMultiplayer, sendGameAction, myPosition, positions, executeCardPass]);
+  }, [selectedCardIndex, hands, getAICardToPass, checkForWinner, updateMatchHistory, calculateRankings, currentRound, isMultiplayer, sendGameAction, myPosition, executeCardPass]);
 
   const playAgain = () => {
     if (isMultiplayer && sendGameAction) {
@@ -560,12 +560,39 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
 
   const canStart = playerNames.every(n => n.trim() !== '') && new Set(playerNames.map(n => n.trim().toLowerCase())).size === 4;
 
+  const renderCard = (card: Card, index: number, isSelectable: boolean = false, isSelected: boolean = false) => {
+    const color = CARD_COLORS[card.colorIndex];
+    return (
+      <div
+        key={`${card.id}-${index}`}
+        onClick={() => isSelectable && setSelectedCardIndex(index)}
+        className={`
+          relative w-full aspect-[3/4] rounded-lg flex items-center justify-center p-2 text-center
+          transition-all duration-200 cursor-pointer
+          ${color.bg} ${color.text}
+          ${isSelected 
+            ? 'border-2 border-white ring-2 ring-white shadow-lg shadow-white/30 transform scale-105' 
+            : 'border-2 border-transparent hover:border-white/50'}
+          ${isSelectable ? '' : 'cursor-default'}
+        `}
+      >
+        <span className="font-bold text-xs sm:text-sm leading-tight uppercase tracking-wide break-words">
+          {card.name}
+        </span>
+      </div>
+    );
+  };
+
+  const renderCardBack = () => (
+    <div className="w-full aspect-[3/4] rounded-lg bg-white/5 border border-white/10" />
+  );
+
   if (gamePhase === 'setup') {
     if (isMultiplayer && !isHost) {
       return (
-        <div className="relative flex min-h-screen w-full flex-col items-center justify-center bg-background-dark p-4">
+        <div className="relative flex min-h-screen w-full flex-col items-center justify-center bg-[#101622] p-4">
           <div className="text-center">
-            <span className="material-symbols-outlined text-6xl text-primary animate-pulse">hourglass_empty</span>
+            <span className="material-symbols-outlined text-6xl text-[#2b6cee] animate-pulse">hourglass_empty</span>
             <h1 className="text-white text-2xl font-bold mt-4">Waiting for Host</h1>
             <p className="text-zinc-400 mt-2">The host is setting up the game...</p>
             {onExit && (
@@ -583,21 +610,21 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
     }
 
     return (
-      <div className="relative flex min-h-screen w-full flex-col items-center bg-background-dark overflow-x-hidden p-4">
+      <div className="relative flex min-h-screen w-full flex-col items-center bg-[#101622] overflow-x-hidden p-4">
         <div className="w-full max-w-md mx-auto">
-          <div className="flex items-center justify-between pt-4 pb-2">
-            {onExit && (
+          {onExit && (
+            <div className="flex items-center justify-between pt-4 pb-2">
               <button
                 onClick={onExit}
                 className="flex size-12 shrink-0 items-center justify-center text-white hover:bg-white/10 rounded-full transition-colors"
               >
                 <span className="material-symbols-outlined text-2xl">arrow_back_ios_new</span>
               </button>
-            )}
-            <div className="flex-1" />
-          </div>
+              <div className="flex-1" />
+            </div>
+          )}
           
-          <div className="text-center pt-4 pb-4">
+          <div className="text-center pt-8 pb-4">
             <h1 className="text-white tracking-light text-[32px] font-bold leading-tight">QuadMatch Royale</h1>
             <p className="text-zinc-400 text-base font-normal leading-normal pt-2">Enter four names to create the card sets for your game.</p>
           </div>
@@ -607,9 +634,9 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
             <div className="flex flex-col gap-4">
               {playerNames.map((name, index) => (
                 <label key={index} className="flex flex-col">
-                  <p className="text-white text-base font-medium leading-normal pb-2">Card Set {index + 1}</p>
+                  <p className="text-white text-base font-medium leading-normal pb-2">Player {index + 1}</p>
                   <input
-                    className="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-zinc-700 bg-zinc-800 focus:border-primary h-14 placeholder:text-zinc-500 p-[15px] text-base font-normal leading-normal"
+                    className="flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-white focus:outline-0 focus:ring-2 focus:ring-[#2b6cee]/50 border border-zinc-700 bg-zinc-800 focus:border-[#2b6cee] h-14 placeholder:text-zinc-500 p-[15px] text-base font-normal leading-normal"
                     placeholder="Enter a unique name"
                     value={name}
                     onChange={(e) => handleNameChange(index, e.target.value)}
@@ -633,7 +660,7 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
                 onClick={() => applyPreset('animals')}
                 className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
                   activePreset === 'animals'
-                    ? 'bg-primary/20 text-sky-300'
+                    ? 'bg-[#2b6cee]/20 text-sky-300'
                     : 'bg-zinc-700/80 text-zinc-300 hover:bg-zinc-700'
                 }`}
               >
@@ -644,7 +671,7 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
                 onClick={() => applyPreset('cities')}
                 className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
                   activePreset === 'cities'
-                    ? 'bg-primary/20 text-sky-300'
+                    ? 'bg-[#2b6cee]/20 text-sky-300'
                     : 'bg-zinc-700/80 text-zinc-300 hover:bg-zinc-700'
                 }`}
               >
@@ -655,7 +682,7 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
                 onClick={() => applyPreset('movies')}
                 className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
                   activePreset === 'movies'
-                    ? 'bg-primary/20 text-sky-300'
+                    ? 'bg-[#2b6cee]/20 text-sky-300'
                     : 'bg-zinc-700/80 text-zinc-300 hover:bg-zinc-700'
                 }`}
               >
@@ -669,9 +696,9 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
             <button
               onClick={startGame}
               disabled={!canStart}
-              className={`flex w-full items-center justify-center gap-2 rounded-xl px-6 h-14 text-base font-bold transition-all ${
+              className={`flex w-full items-center justify-center gap-2 rounded-xl px-6 h-14 text-base font-bold transition-colors ${
                 canStart
-                  ? 'bg-primary text-white hover:bg-primary/90 shadow-lg shadow-primary/30'
+                  ? 'bg-[#2b6cee] text-white hover:bg-[#2b6cee]/90 shadow-lg shadow-[#2b6cee]/30'
                   : 'bg-zinc-700 text-zinc-400 cursor-not-allowed'
               }`}
             >
@@ -683,27 +710,125 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
     );
   }
 
+  if (gamePhase === 'playing' || gamePhase === 'rotating') {
+    const isRotating = gamePhase === 'rotating';
+    
+    return (
+      <div className="relative flex h-screen w-full flex-col p-4 pt-6 overflow-hidden bg-[#101622]">
+        <div className="flex items-center justify-between pb-2">
+          <div className="flex size-12 shrink-0 items-center justify-start">
+            <span className="material-symbols-outlined text-white/80" style={{ fontSize: '28px' }}>neurology</span>
+          </div>
+          <h2 className="text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">Round {currentRound}</h2>
+          <div className="flex w-12 items-center justify-end">
+            {onExit && (
+              <button 
+                onClick={onExit}
+                className="flex h-12 w-12 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-transparent text-white/80 hover:bg-white/10 transition-colors"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '28px' }}>close</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="flex-1 flex flex-col items-center justify-center relative">
+          <div className="absolute top-4 text-center z-10">
+            <h2 className="text-white tracking-light text-[28px] font-bold leading-tight">
+              {isRotating ? 'Passing cards...' : 'Select a card to pass'}
+            </h2>
+            <p className="text-white/60 text-base font-normal leading-normal pt-1">
+              {isRotating ? 'Cards rotating clockwise' : 'Your Turn'}
+            </p>
+          </div>
+
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="relative w-24 h-24">
+              <span className="material-symbols-outlined text-white/10 absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2" style={{ fontSize: '32px', transform: 'rotate(-45deg) translateX(32px) translateY(-32px)' }}>arrow_back</span>
+              <span className="material-symbols-outlined text-white/10 absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2" style={{ fontSize: '32px', transform: 'rotate(135deg) translateX(32px) translateY(-32px)' }}>arrow_back</span>
+              <span className="material-symbols-outlined text-white/10 absolute top-1/2 left-0 -translate-x-1/2 -translate-y-1/2" style={{ fontSize: '32px', transform: 'rotate(45deg) translateX(32px) translateY(-32px)' }}>arrow_back</span>
+              <span className="material-symbols-outlined text-white/10 absolute top-1/2 right-0 translate-x-1/2 -translate-y-1/2" style={{ fontSize: '32px', transform: 'rotate(-135deg) translateX(32px) translateY(-32px)' }}>arrow_back</span>
+            </div>
+          </div>
+
+          <div className="relative w-full aspect-square max-w-sm">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4/5">
+              <p className="text-white/60 text-sm font-normal leading-normal text-center mb-2">Player 3</p>
+              <div className="grid grid-cols-4 gap-2">
+                {hands.north.map((_, idx) => (
+                  <div key={idx}>{renderCardBack()}</div>
+                ))}
+              </div>
+            </div>
+
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-4/5 rotate-90">
+              <p className="text-white/60 text-sm font-normal leading-normal text-center mb-2 rotate-[-90deg]">Player 2</p>
+              <div className="grid grid-cols-4 gap-2">
+                {hands.west.map((_, idx) => (
+                  <div key={idx}>{renderCardBack()}</div>
+                ))}
+              </div>
+            </div>
+
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-4/5 -rotate-90">
+              <p className="text-white/60 text-sm font-normal leading-normal text-center mb-2 rotate-[90deg]">Player 4</p>
+              <div className="grid grid-cols-4 gap-2">
+                {hands.east.map((_, idx) => (
+                  <div key={idx}>{renderCardBack()}</div>
+                ))}
+              </div>
+            </div>
+
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-full p-2 rounded-xl bg-[#2b6cee]/20 border-2 border-[#2b6cee] shadow-lg shadow-[#2b6cee]/20">
+              <p className="text-white text-base font-bold leading-normal text-center mb-3">You</p>
+              <div className="grid grid-cols-4 gap-2 px-2">
+                {hands.south.map((card, idx) => (
+                  <div key={idx} className="flex flex-col gap-3">
+                    {renderCard(card, idx, !isRotating, selectedCardIndex === idx)}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="w-full pt-4 pb-2">
+          <button
+            onClick={passCards}
+            disabled={selectedCardIndex === null || isRotating}
+            className={`w-full flex items-center justify-center rounded-xl h-14 gap-2 text-lg font-bold leading-normal tracking-[0.015em] transition-all ${
+              selectedCardIndex !== null && !isRotating
+                ? 'bg-[#2b6cee] text-white shadow-lg shadow-[#2b6cee]/30 hover:bg-[#2b6cee]/90'
+                : 'bg-zinc-700 text-zinc-400 cursor-not-allowed'
+            }`}
+          >
+            <span>{isRotating ? 'Passing...' : 'Pass Selected Card'}</span>
+            {!isRotating && <span className="material-symbols-outlined">arrow_forward</span>}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (gamePhase === 'gameOver') {
     const winnerRanking = rankings.find(r => r.place === 1);
     
     return (
-      <div className="relative flex min-h-screen w-full flex-col items-center bg-background-dark overflow-x-hidden p-4">
+      <div className="relative flex min-h-screen w-full flex-col items-center overflow-x-hidden p-4 bg-[#101622]">
         <div className="w-full text-center py-6">
           <h1 className="text-3xl font-bold tracking-tight text-white">WINNER!</h1>
-          <p className="text-base text-zinc-400 mt-1">
-            Congratulations, {winnerRanking?.name}!
-          </p>
+          <p className="text-base text-zinc-400 mt-1">Congratulations, {winnerRanking?.name}!</p>
         </div>
 
         {winnerRanking && (
           <div className="w-full max-w-md">
-            <div className="flex flex-col items-stretch justify-start rounded-xl bg-primary/20 shadow-lg p-4 mb-6 ring-2 ring-primary">
+            <div className="flex flex-col items-stretch justify-start rounded-xl bg-[#2b6cee]/20 shadow-lg p-4 mb-6 ring-2 ring-[#2b6cee]">
               <div className="flex items-center gap-4 mb-4">
                 <div className="relative">
-                  <div className="flex items-center justify-center rounded-full size-16 bg-primary text-white">
-                    <span className="material-symbols-outlined text-3xl">emoji_events</span>
+                  <div className="bg-[#2b6cee] rounded-full size-16 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-white text-3xl">emoji_events</span>
                   </div>
-                  <div className="absolute -top-2 -right-2 flex size-8 items-center justify-center rounded-full bg-yellow-500 text-white">
+                  <div className="absolute -top-2 -right-2 flex size-8 items-center justify-center rounded-full bg-[#2b6cee] text-white">
                     <span className="material-symbols-outlined text-lg">workspace_premium</span>
                   </div>
                 </div>
@@ -716,11 +841,8 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
                 <p className="text-sm font-medium text-zinc-400">Final Hand</p>
                 <div className="grid grid-cols-4 gap-2">
                   {winnerRanking.hand.map((card, idx) => (
-                    <div
-                      key={idx}
-                      className={`aspect-[3/4] rounded-lg flex items-center justify-center p-1 text-center ${CARD_COLORS[card.colorIndex].bg}`}
-                    >
-                      <span className="font-bold text-white text-xs leading-tight">{card.name}</span>
+                    <div key={idx} className={`aspect-[3/4] rounded-lg ${CARD_COLORS[card.colorIndex].bg} flex items-center justify-center p-1`}>
+                      <span className="font-bold text-white text-xs leading-tight text-center uppercase">{card.name}</span>
                     </div>
                   ))}
                 </div>
@@ -735,23 +857,18 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
         )}
 
         <div className="w-full max-w-md space-y-3">
-          {rankings.filter(r => r.place > 1).map((ranking) => (
+          {rankings.filter(r => r.place > 1).map(ranking => (
             <div key={ranking.position} className="flex items-center gap-4 bg-white/5 p-3 rounded-lg">
-              <div className="flex items-center justify-center rounded-full size-12 bg-zinc-700 text-white">
-                <span className="text-lg font-bold">{ranking.place}</span>
+              <div className="bg-zinc-700 rounded-full size-12 flex items-center justify-center">
+                <span className="text-white font-bold">{ranking.place}</span>
               </div>
               <div className="flex-grow">
-                <p className="text-base font-medium leading-normal text-white">
-                  {ranking.name} - {ranking.place === 2 ? '2nd' : ranking.place === 3 ? '3rd' : '4th'} Place
-                </p>
+                <p className="text-base font-medium leading-normal text-white">{ranking.name} - {ranking.place === 2 ? '2nd' : ranking.place === 3 ? '3rd' : '4th'} Place</p>
                 <p className="text-sm font-normal leading-normal text-zinc-400">{ranking.matchType}</p>
               </div>
               <div className="grid grid-cols-4 gap-1">
                 {ranking.hand.map((card, idx) => (
-                  <div
-                    key={idx}
-                    className={`aspect-[3/4] w-8 rounded flex items-center justify-center ${CARD_COLORS[card.colorIndex].bg}`}
-                  />
+                  <div key={idx} className={`aspect-[3/4] w-8 rounded ${CARD_COLORS[card.colorIndex].bg} flex items-center justify-center`} />
                 ))}
               </div>
             </div>
@@ -761,12 +878,12 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
         <div className="w-full max-w-md mt-8 p-4 rounded-xl bg-white/5">
           <div className="grid grid-cols-2 gap-4 text-center">
             <div>
-              <span className="material-symbols-outlined text-3xl text-primary">replay</span>
+              <span className="material-symbols-outlined text-3xl text-[#2b6cee]">replay</span>
               <p className="mt-1 text-2xl font-bold text-white">{currentRound}</p>
               <p className="text-sm text-zinc-400">Total Rounds</p>
             </div>
             <div>
-              <span className="material-symbols-outlined text-3xl text-primary">swap_horiz</span>
+              <span className="material-symbols-outlined text-3xl text-[#2b6cee]">swap_horiz</span>
               <p className="mt-1 text-2xl font-bold text-white">{currentRound * 4}</p>
               <p className="text-sm text-zinc-400">Cards Passed</p>
             </div>
@@ -776,22 +893,22 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
         <div className="w-full max-w-md mt-auto pt-8 pb-4 space-y-3">
           <button
             onClick={playAgain}
-            className="flex h-12 w-full items-center justify-center rounded-lg bg-primary px-6 text-base font-semibold text-white shadow-sm hover:bg-primary/90"
+            className="flex h-12 w-full items-center justify-center rounded-lg bg-[#2b6cee] px-6 text-base font-semibold text-white shadow-sm hover:bg-[#2b6cee]/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#2b6cee]"
           >
             Play Again
           </button>
           <button
             onClick={newGame}
-            className="flex h-12 w-full items-center justify-center rounded-lg bg-transparent px-6 text-base font-semibold text-primary ring-1 ring-inset ring-primary/50 hover:bg-primary/10"
+            className="flex h-12 w-full items-center justify-center rounded-lg bg-transparent px-6 text-base font-semibold text-[#2b6cee] ring-1 ring-inset ring-[#2b6cee]/50 hover:bg-[#2b6cee]/10"
           >
             Change Names
           </button>
           {onExit && (
             <button
               onClick={onExit}
-              className="flex h-12 w-full items-center justify-center rounded-lg bg-transparent px-6 text-base font-semibold text-zinc-400 hover:text-white"
+              className="flex h-12 w-full items-center justify-center rounded-lg bg-transparent px-6 text-base font-semibold text-zinc-400 hover:text-white hover:bg-white/5"
             >
-              Exit Game
+              Exit to Menu
             </button>
           )}
         </div>
@@ -799,155 +916,7 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
     );
   }
 
-  const isRotating = gamePhase === 'rotating';
-
-  const renderOpponentHand = (position: Position, label: string) => {
-    const hand = hands[position];
-    return (
-      <div className="flex flex-col items-center gap-2">
-        <p className="text-white/60 text-sm font-medium">{label}</p>
-        <div className="flex gap-1.5">
-          {hand.map((_, idx) => (
-            <div 
-              key={idx} 
-              className="w-10 h-14 bg-gradient-to-br from-zinc-700 to-zinc-800 rounded-lg border border-white/10 shadow-md flex items-center justify-center"
-            >
-              <span className="material-symbols-outlined text-white/20 text-lg">style</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  return (
-    <div className="relative flex min-h-screen w-full flex-col bg-background-dark overflow-hidden">
-      <div className="flex items-center justify-between p-4 pb-2">
-        <div className="flex size-12 shrink-0 items-center justify-start">
-          <span className="material-symbols-outlined text-white/80 text-[28px]">neurology</span>
-        </div>
-        <h2 className="text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">
-          Round {currentRound}
-        </h2>
-        <div className="flex w-12 items-center justify-end">
-          {onExit && (
-            <button
-              onClick={onExit}
-              className="flex h-12 w-12 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-transparent text-white/80 hover:bg-white/10"
-            >
-              <span className="material-symbols-outlined text-[28px]">close</span>
-            </button>
-          )}
-        </div>
-      </div>
-
-      <div className="text-center px-4 pt-2 pb-4">
-        <h2 className="text-white tracking-light text-2xl font-bold leading-tight">
-          {isRotating ? 'Passing cards...' : 'Select a card to pass'}
-        </h2>
-        <p className="text-white/60 text-sm font-normal leading-normal pt-1">
-          {isRotating ? 'Cards rotating clockwise' : 'Your Turn - Tap a card to select it'}
-        </p>
-      </div>
-
-      <div className="flex-1 flex flex-col items-center justify-center px-4 py-2">
-        <div className="w-full max-w-md flex flex-col items-center gap-6">
-          {renderOpponentHand('north', 'North (AI)')}
-
-          <div className="flex w-full justify-between items-center px-4">
-            <div className="transform -rotate-90 origin-center">
-              {renderOpponentHand('west', 'West (AI)')}
-            </div>
-
-            <div className="relative w-20 h-20">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className={`w-16 h-16 rounded-full border-2 border-dashed ${isRotating ? 'border-primary animate-spin' : 'border-white/20'}`}></div>
-              </div>
-              <span 
-                className={`material-symbols-outlined absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 ${isRotating ? 'text-primary' : 'text-white/30'}`} 
-                style={{ fontSize: '20px' }}
-              >
-                arrow_upward
-              </span>
-              <span 
-                className={`material-symbols-outlined absolute right-0 top-1/2 -translate-y-1/2 translate-x-1 ${isRotating ? 'text-primary' : 'text-white/30'}`} 
-                style={{ fontSize: '20px' }}
-              >
-                arrow_forward
-              </span>
-              <span 
-                className={`material-symbols-outlined absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1 ${isRotating ? 'text-primary' : 'text-white/30'}`} 
-                style={{ fontSize: '20px' }}
-              >
-                arrow_downward
-              </span>
-              <span 
-                className={`material-symbols-outlined absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 ${isRotating ? 'text-primary' : 'text-white/30'}`} 
-                style={{ fontSize: '20px' }}
-              >
-                arrow_back
-              </span>
-            </div>
-
-            <div className="transform rotate-90 origin-center">
-              {renderOpponentHand('east', 'East (AI)')}
-            </div>
-          </div>
-
-          <div className="w-full p-4 rounded-2xl bg-primary/10 border-2 border-primary/50 shadow-lg shadow-primary/10">
-            <p className="text-white text-base font-bold leading-normal text-center mb-4">
-              Your Hand (South)
-            </p>
-            <div className="grid grid-cols-4 gap-3">
-              {hands.south.map((card, idx) => (
-                <button
-                  key={card.id}
-                  onClick={() => !isRotating && setSelectedCardIndex(idx)}
-                  disabled={isRotating}
-                  className={`relative aspect-[3/4] rounded-xl flex flex-col items-center justify-center p-2 text-center transition-all duration-200 ${
-                    CARD_COLORS[card.colorIndex].bg
-                  } ${
-                    selectedCardIndex === idx
-                      ? 'ring-4 ring-white shadow-xl shadow-white/20 scale-105 -translate-y-2'
-                      : 'hover:scale-102 hover:-translate-y-1 hover:shadow-lg'
-                  } ${isRotating ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                >
-                  <span className="font-bold text-white text-sm leading-tight uppercase break-words">{card.name}</span>
-                  {selectedCardIndex === idx && (
-                    <div className="absolute -top-2 -right-2 flex size-6 items-center justify-center rounded-full bg-white text-primary">
-                      <span className="material-symbols-outlined text-sm">check</span>
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
-            {selectedCardIndex !== null && !isRotating && (
-              <p className="text-center text-primary text-sm mt-3 font-medium">
-                Passing "{hands.south[selectedCardIndex].name}" to West
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="p-4 pb-6">
-        <button
-          onClick={passCards}
-          disabled={selectedCardIndex === null || isRotating}
-          className={`w-full flex items-center justify-center rounded-xl h-14 gap-2 text-lg font-bold leading-normal tracking-[0.015em] transition-all ${
-            selectedCardIndex !== null && !isRotating
-              ? 'bg-primary text-white shadow-lg shadow-primary/30 hover:bg-primary/90 active:scale-[0.98]'
-              : 'bg-zinc-700 text-zinc-400 cursor-not-allowed'
-          }`}
-        >
-          <span>{isRotating ? 'Passing...' : 'Pass Selected Card'}</span>
-          {!isRotating && selectedCardIndex !== null && (
-            <span className="material-symbols-outlined">arrow_forward</span>
-          )}
-        </button>
-      </div>
-    </div>
-  );
+  return null;
 };
 
 export default QuadMatchRoyale;
