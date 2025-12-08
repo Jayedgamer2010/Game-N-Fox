@@ -1658,6 +1658,9 @@ const App: React.FC = () => {
         const isQuadMatchHost = isMultiplayerMode && multiplayerState.room 
           ? multiplayerState.room.hostId === multiplayerState.playerId 
           : true;
+        const mpPlayerNames = isMultiplayerMode && multiplayerState.room?.players
+          ? multiplayerState.room.players.map(p => p.name)
+          : undefined;
         return (
           <QuadMatchRoyale 
             onExit={handleGoHome}
@@ -1666,6 +1669,7 @@ const App: React.FC = () => {
             myPosition={getMyQuadMatchPosition()}
             isHost={isQuadMatchHost}
             onGameAction={(callback) => { quadMatchActionCallbackRef.current = callback; }}
+            multiplayerPlayerNames={mpPlayerNames}
           />
         );
       }
@@ -1676,6 +1680,9 @@ const App: React.FC = () => {
       const isQuadMatchHost = isMultiplayerMode && multiplayerState.room 
         ? multiplayerState.room.hostId === multiplayerState.playerId 
         : true;
+      const mpPlayerNames = isMultiplayerMode && multiplayerState.room?.players
+        ? multiplayerState.room.players.map(p => p.name)
+        : undefined;
       return (
         <QuadMatchRoyale 
           onExit={handleGoHome}
@@ -1684,6 +1691,7 @@ const App: React.FC = () => {
           myPosition={getMyQuadMatchPosition()}
           isHost={isQuadMatchHost}
           onGameAction={(callback) => { quadMatchActionCallbackRef.current = callback; }}
+          multiplayerPlayerNames={mpPlayerNames}
         />
       );
     }

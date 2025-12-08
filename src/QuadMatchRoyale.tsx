@@ -80,6 +80,7 @@ interface QuadMatchRoyaleProps {
   myPosition?: Position;
   isHost?: boolean;
   onGameAction?: (callback: (data: { action: string; data: any }) => void) => void;
+  multiplayerPlayerNames?: string[];
 }
 
 const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({ 
@@ -88,7 +89,8 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
   sendGameAction, 
   myPosition = 'south',
   isHost = false,
-  onGameAction 
+  onGameAction,
+  multiplayerPlayerNames
 }) => {
   const [gamePhase, setGamePhase] = useState<GamePhase>('setup');
   const [playerNames, setPlayerNames] = useState<string[]>(['', '', '', '']);
@@ -102,6 +104,7 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
   const [matchHistory, setMatchHistory] = useState<MatchHistory[]>([]);
   const [nameError, setNameError] = useState<string | null>(null);
   const [activePreset, setActivePreset] = useState<string | null>(null);
+  const [showQuitConfirm, setShowQuitConfirm] = useState(false);
   
   const pendingSelectionsRef = useRef<Record<Position, number | null>>({
     south: null, west: null, north: null, east: null
@@ -475,6 +478,62 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
 
   const canStart = playerNames.every(n => n.trim() !== '') && new Set(playerNames.map(n => n.trim().toLowerCase())).size === 4;
 
+  const getPositionLabel = useCallback((position: Position, showYouForSelf: boolean = true): string => {
+    if (isMultiplayer && multiplayerPlayerNames && multiplayerPlayerNames.length === 4) {
+      if (showYouForSelf && position === myPosition) {
+        return 'You';
+      }
+      const positionIndexMap: Record<Position, number> = {
+        south: 0, west: 1, north: 2, east: 3
+      };
+      return multiplayerPlayerNames[positionIndexMap[position]] || POSITION_LABELS[position];
+    }
+    return POSITION_LABELS[position];
+  }, [isMultiplayer, multiplayerPlayerNames, myPosition]);
+
+  const handleQuitClick = () => {
+    setShowQuitConfirm(true);
+  };
+
+  const handleConfirmQuit = () => {
+    setShowQuitConfirm(false);
+    if (onExit) onExit();
+  };
+
+  const handleCancelQuit = () => {
+    setShowQuitConfirm(false);
+  };
+
+  const QuitConfirmationPopup = () => (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+      <div className="bg-[#1a2233] rounded-2xl w-full max-w-sm p-6 shadow-2xl border border-white/10">
+        <div className="flex flex-col items-center text-center">
+          <div className="flex items-center justify-center size-16 rounded-full bg-red-500/20 mb-4">
+            <span className="material-symbols-outlined text-4xl text-red-400">logout</span>
+          </div>
+          <h2 className="text-white text-xl font-bold mb-2">Leave Game?</h2>
+          <p className="text-gray-400 text-sm mb-6">
+            Are you sure you want to quit? Your current progress will be lost.
+          </p>
+          <div className="flex gap-3 w-full">
+            <button
+              onClick={handleCancelQuit}
+              className="flex-1 py-3 px-4 rounded-xl bg-gray-700 text-white font-semibold hover:bg-gray-600 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleConfirmQuit}
+              className="flex-1 py-3 px-4 rounded-xl bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors"
+            >
+              Leave
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   const renderCard = (card: Card, index: number, isSelectable: boolean = false, isSelected: boolean = false) => {
     const color = CARD_COLORS[card.colorIndex];
     return (
@@ -515,12 +574,13 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
     if (isMultiplayer && !isHost) {
       return (
         <div className="relative flex min-h-screen w-full flex-col items-center justify-center bg-[#101622] p-4">
+          {showQuitConfirm && <QuitConfirmationPopup />}
           <div className="text-center">
             <span className="material-symbols-outlined text-6xl text-[#2b6cee] animate-pulse">hourglass_empty</span>
             <h1 className="text-white text-2xl font-bold mt-4">Waiting for Host</h1>
             <p className="text-gray-400 mt-2">The host is setting up the game...</p>
             {onExit && (
-              <button onClick={onExit} className="mt-6 flex items-center justify-center gap-2 rounded-xl bg-gray-700 px-6 py-3 text-white hover:bg-gray-600 transition-colors">
+              <button onClick={handleQuitClick} className="mt-6 flex items-center justify-center gap-2 rounded-xl bg-gray-700 px-6 py-3 text-white hover:bg-gray-600 transition-colors">
                 <span className="material-symbols-outlined">arrow_back</span>
                 Leave Game
               </button>
@@ -532,10 +592,11 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
 
     return (
       <div className="relative flex min-h-screen w-full flex-col items-center bg-[#101622] overflow-x-hidden p-4">
+        {showQuitConfirm && <QuitConfirmationPopup />}
         <div className="w-full max-w-md mx-auto">
           {onExit && (
             <div className="flex items-center justify-between pt-4 pb-2">
-              <button onClick={onExit} className="flex size-12 shrink-0 items-center justify-center text-white hover:bg-white/10 rounded-full transition-colors">
+              <button onClick={handleQuitClick} className="flex size-12 shrink-0 items-center justify-center text-white hover:bg-white/10 rounded-full transition-colors">
                 <span className="material-symbols-outlined text-2xl">arrow_back_ios_new</span>
               </button>
               <div className="flex-1" />
@@ -614,6 +675,8 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
     
     return (
       <div className="relative flex h-screen w-full flex-col bg-[#101622] p-4 pt-6 overflow-hidden">
+        {showQuitConfirm && <QuitConfirmationPopup />}
+        
         <div className="flex items-center justify-between pb-2">
           <div className="flex size-12 shrink-0 items-center justify-start">
             <span className="material-symbols-outlined text-white/80" style={{ fontSize: '28px' }}>neurology</span>
@@ -621,7 +684,7 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
           <h2 className="text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center">Round {currentRound}</h2>
           <div className="flex w-12 items-center justify-end">
             {onExit && (
-              <button onClick={onExit} className="flex h-12 w-12 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-transparent text-white/80 hover:bg-white/10 transition-colors">
+              <button onClick={handleQuitClick} className="flex h-12 w-12 cursor-pointer items-center justify-center overflow-hidden rounded-full bg-transparent text-white/80 hover:bg-white/10 transition-colors">
                 <span className="material-symbols-outlined" style={{ fontSize: '28px' }}>close</span>
               </button>
             )}
@@ -649,7 +712,7 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
 
           <div className="relative w-full aspect-square max-w-sm">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4/5">
-              <p className="text-white/60 text-sm font-normal leading-normal text-center mb-2">{POSITION_LABELS.north}</p>
+              <p className="text-white/60 text-sm font-normal leading-normal text-center mb-2">{getPositionLabel('north')}</p>
               <div className="grid grid-cols-4 gap-2">
                 {hands.north.map((_, idx) => (
                   <div key={idx}>{renderCardBack()}</div>
@@ -658,7 +721,7 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
             </div>
 
             <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/3 w-3/5">
-              <p className="text-white/60 text-sm font-normal leading-normal text-center mb-2">{POSITION_LABELS.west}</p>
+              <p className="text-white/60 text-sm font-normal leading-normal text-center mb-2">{getPositionLabel('west')}</p>
               <div className="grid grid-cols-4 gap-1">
                 {hands.west.map((_, idx) => (
                   <div key={idx}>{renderCardBack()}</div>
@@ -667,7 +730,7 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
             </div>
 
             <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/3 w-3/5">
-              <p className="text-white/60 text-sm font-normal leading-normal text-center mb-2">{POSITION_LABELS.east}</p>
+              <p className="text-white/60 text-sm font-normal leading-normal text-center mb-2">{getPositionLabel('east')}</p>
               <div className="grid grid-cols-4 gap-1">
                 {hands.east.map((_, idx) => (
                   <div key={idx}>{renderCardBack()}</div>
@@ -676,7 +739,7 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
             </div>
 
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-full p-3 rounded-xl bg-[#2b6cee]/20 border-2 border-[#2b6cee] shadow-lg shadow-[#2b6cee]/20">
-              <p className="text-white text-base font-bold leading-normal text-center mb-3">{POSITION_LABELS.south}</p>
+              <p className="text-white text-base font-bold leading-normal text-center mb-3">{getPositionLabel('south')}</p>
               <div className="grid grid-cols-4 gap-2 px-2">
                 {hands.south.map((card, idx) => (
                   <div key={card.id} className="flex flex-col gap-3">
@@ -710,12 +773,14 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
     const winnerRanking = rankings.find(r => r.position === winner);
     const otherRankings = rankings.filter(r => r.position !== winner);
     const totalCardsPassed = (currentRound - 1) * 4;
+    const getDisplayName = (position: Position) => getPositionLabel(position, false);
 
     return (
       <div className="relative flex min-h-screen w-full flex-col items-center bg-[#101622] overflow-x-hidden p-4">
+        {showQuitConfirm && <QuitConfirmationPopup />}
         <div className="w-full text-center py-6">
           <h1 className="text-3xl font-bold tracking-tight text-white">WINNER!</h1>
-          <p className="text-base text-gray-400 mt-1">Congratulations, {winnerRanking?.name || POSITION_LABELS[winner]}!</p>
+          <p className="text-base text-gray-400 mt-1">Congratulations, {getDisplayName(winner)}!</p>
         </div>
 
         {winnerRanking && (
@@ -731,7 +796,7 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
                   </div>
                 </div>
                 <div className="flex flex-col">
-                  <p className="text-lg font-bold leading-tight tracking-tight text-white">{winnerRanking.name}</p>
+                  <p className="text-lg font-bold leading-tight tracking-tight text-white">{getDisplayName(winnerRanking.position)}</p>
                   <p className="text-base font-normal leading-normal text-gray-300">1st Place</p>
                 </div>
               </div>
@@ -764,7 +829,7 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
                 <span className="material-symbols-outlined text-2xl text-gray-400">person</span>
               </div>
               <div className="flex-grow">
-                <p className="text-base font-medium leading-normal text-white">{ranking.name} - {ranking.place === 2 ? '2nd' : ranking.place === 3 ? '3rd' : '4th'} Place</p>
+                <p className="text-base font-medium leading-normal text-white">{getDisplayName(ranking.position)} - {ranking.place === 2 ? '2nd' : ranking.place === 3 ? '3rd' : '4th'} Place</p>
                 <p className="text-sm font-normal leading-normal text-gray-400">{ranking.matchType}</p>
               </div>
               <div className="grid grid-cols-4 gap-1">
@@ -802,6 +867,15 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
           >
             Change Names
           </button>
+          {onExit && (
+            <button
+              onClick={handleQuitClick}
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-transparent px-6 text-base font-semibold text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
+            >
+              <span className="material-symbols-outlined text-xl">home</span>
+              Back to Home
+            </button>
+          )}
         </div>
       </div>
     );
