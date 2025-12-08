@@ -65,9 +65,21 @@ const getMatchTypeName = (level: number): string => {
 
 interface QuadMatchRoyaleProps {
   onExit?: () => void;
+  isMultiplayer?: boolean;
+  sendGameAction?: (action: string, data: any) => void;
+  myPosition?: Position;
+  isHost?: boolean;
+  onGameAction?: (callback: (data: { action: string; data: any }) => void) => void;
 }
 
-const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({ onExit }) => {
+const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({ 
+  onExit, 
+  isMultiplayer = false, 
+  sendGameAction, 
+  myPosition = 'south',
+  isHost = false,
+  onGameAction 
+}) => {
   const [gamePhase, setGamePhase] = useState<GamePhase>('setup');
   const [playerNames, setPlayerNames] = useState<string[]>(['', '', '', '']);
   const [hands, setHands] = useState<Record<Position, Card[]>>({
@@ -86,8 +98,79 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({ onExit }) => {
   const cardReceivedRef = useRef<Record<Position, number>>({
     south: 0, west: 0, north: 0, east: 0
   });
+  const pendingSelectionsRef = useRef<Record<Position, number | null>>({
+    south: null, west: null, north: null, east: null
+  });
+  const isHostRef = useRef(isHost);
+  const executeCardPassRef = useRef<((selections: Record<Position, number>) => void) | null>(null);
+
+  useEffect(() => {
+    isHostRef.current = isHost;
+  }, [isHost]);
 
   const positions: Position[] = ['south', 'west', 'north', 'east'];
+
+  useEffect(() => {
+    if (!isMultiplayer || !onGameAction) return;
+
+    const handleAction = (payload: { action: string; data: any }) => {
+      const { action, data } = payload;
+      
+      switch (action) {
+        case 'quadmatch_game_started':
+          setHands(data.hands);
+          setPlayerNames(data.playerNames);
+          setCurrentRound(1);
+          setSelectedCardIndex(null);
+          setWinner(null);
+          setRankings([]);
+          setMatchHistory([]);
+          cardReceivedRef.current = { south: 0, west: 0, north: 0, east: 0 };
+          pendingSelectionsRef.current = { south: null, west: null, north: null, east: null };
+          setGamePhase('playing');
+          break;
+
+        case 'quadmatch_card_selected':
+          pendingSelectionsRef.current[data.position as Position] = data.cardIndex;
+          const allSelected = positions.every(p => 
+            pendingSelectionsRef.current[p] !== null
+          );
+          if (allSelected && isHostRef.current && executeCardPassRef.current) {
+            executeCardPassRef.current(pendingSelectionsRef.current as Record<Position, number>);
+          }
+          break;
+
+        case 'quadmatch_cards_passed':
+          setHands(data.newHands);
+          setCurrentRound(data.currentRound);
+          setMatchHistory(data.matchHistory);
+          setSelectedCardIndex(null);
+          pendingSelectionsRef.current = { south: null, west: null, north: null, east: null };
+          if (data.winner) {
+            setWinner(data.winner);
+            setRankings(data.rankings);
+            setGamePhase('gameOver');
+          } else {
+            setGamePhase('playing');
+          }
+          break;
+
+        case 'quadmatch_play_again':
+          setHands(data.hands);
+          setCurrentRound(1);
+          setSelectedCardIndex(null);
+          setWinner(null);
+          setRankings([]);
+          setMatchHistory([]);
+          cardReceivedRef.current = { south: 0, west: 0, north: 0, east: 0 };
+          pendingSelectionsRef.current = { south: null, west: null, north: null, east: null };
+          setGamePhase('playing');
+          break;
+      }
+    };
+
+    onGameAction(handleAction);
+  }, [isMultiplayer, onGameAction]);
   
   const positionLabels: Record<Position, string> = {
     south: 'You (South)',
@@ -149,6 +232,13 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({ onExit }) => {
       east: deck.slice(12, 16),
     };
     
+    if (isMultiplayer && sendGameAction) {
+      sendGameAction('quadmatch_game_started', {
+        hands: newHands,
+        playerNames: playerNames,
+      });
+    }
+    
     setHands(newHands);
     setCurrentRound(1);
     setSelectedCardIndex(null);
@@ -158,6 +248,86 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({ onExit }) => {
     cardReceivedRef.current = { south: 0, west: 0, north: 0, east: 0 };
     setGamePhase('playing');
   };
+
+  const executeCardPass = useCallback((selections: Record<Position, number>) => {
+    setGamePhase('rotating');
+
+    setTimeout(() => {
+      const newHands: Record<Position, Card[]> = {
+        south: [...hands.south],
+        west: [...hands.west],
+        north: [...hands.north],
+        east: [...hands.east],
+      };
+
+      const passingCards = {
+        south: newHands.south.splice(selections.south, 1)[0],
+        west: newHands.west.splice(selections.west, 1)[0],
+        north: newHands.north.splice(selections.north, 1)[0],
+        east: newHands.east.splice(selections.east, 1)[0],
+      };
+
+      newHands.west.push(passingCards.south);
+      newHands.north.push(passingCards.west);
+      newHands.east.push(passingCards.north);
+      newHands.south.push(passingCards.east);
+
+      const winnerPos = checkForWinner(newHands);
+      let newHistory = matchHistory;
+      let finalRankings: PlayerRanking[] = [];
+
+      if (winnerPos) {
+        newHistory = [...matchHistory];
+        positions.forEach(pos => {
+          const level = getMatchLevel(newHands[pos]);
+          const existingEntry = newHistory.find(h => h.position === pos && h.matchLevel === level);
+          if (!existingEntry && level >= 2) {
+            newHistory.push({ position: pos, matchLevel: level, round: currentRound });
+          }
+        });
+        finalRankings = calculateRankings(newHands, winnerPos, newHistory);
+      } else {
+        const updatedHistory: MatchHistory[] = [...matchHistory];
+        positions.forEach(pos => {
+          const level = getMatchLevel(newHands[pos]);
+          const existingEntry = updatedHistory.find(h => h.position === pos && h.matchLevel === level);
+          if (!existingEntry && level >= 2) {
+            updatedHistory.push({ position: pos, matchLevel: level, round: currentRound });
+          }
+        });
+        newHistory = updatedHistory;
+      }
+
+      if (isMultiplayer && sendGameAction) {
+        sendGameAction('quadmatch_cards_passed', {
+          newHands,
+          currentRound: currentRound + 1,
+          matchHistory: newHistory,
+          winner: winnerPos,
+          rankings: finalRankings,
+        });
+      }
+
+      setHands(newHands);
+      setSelectedCardIndex(null);
+      pendingSelectionsRef.current = { south: null, west: null, north: null, east: null };
+
+      if (winnerPos) {
+        setWinner(winnerPos);
+        setRankings(finalRankings);
+        setMatchHistory(newHistory);
+        setGamePhase('gameOver');
+      } else {
+        setMatchHistory(newHistory);
+        setCurrentRound(prev => prev + 1);
+        setGamePhase('playing');
+      }
+    }, 500);
+  }, [hands, matchHistory, currentRound, checkForWinner, calculateRankings, positions, isMultiplayer, sendGameAction]);
+
+  useEffect(() => {
+    executeCardPassRef.current = executeCardPass;
+  }, [executeCardPass]);
 
   const getAICardToPass = useCallback((hand: Card[], position: Position): number => {
     const counts: Record<string, number> = {};
@@ -243,6 +413,22 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({ onExit }) => {
   const passCards = useCallback(() => {
     if (selectedCardIndex === null) return;
 
+    if (isMultiplayer && sendGameAction) {
+      sendGameAction('quadmatch_card_selected', {
+        position: myPosition,
+        cardIndex: selectedCardIndex,
+      });
+      pendingSelectionsRef.current[myPosition] = selectedCardIndex;
+      
+      const allSelected = positions.every(p => 
+        pendingSelectionsRef.current[p] !== null
+      );
+      if (allSelected && isHostRef.current) {
+        executeCardPass(pendingSelectionsRef.current as Record<Position, number>);
+      }
+      return;
+    }
+
     setGamePhase('rotating');
 
     const aiSelections: Record<Position, number> = {
@@ -288,10 +474,29 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({ onExit }) => {
         setGamePhase('playing');
       }
     }, 500);
-  }, [selectedCardIndex, hands, getAICardToPass, checkForWinner, updateMatchHistory, calculateRankings, currentRound]);
+  }, [selectedCardIndex, hands, getAICardToPass, checkForWinner, updateMatchHistory, calculateRankings, currentRound, isMultiplayer, sendGameAction, myPosition, positions, executeCardPass]);
 
   const playAgain = () => {
-    startGame();
+    if (isMultiplayer && sendGameAction) {
+      const deck = createDeck();
+      const newHands: Record<Position, Card[]> = {
+        south: deck.slice(0, 4),
+        west: deck.slice(4, 8),
+        north: deck.slice(8, 12),
+        east: deck.slice(12, 16),
+      };
+      sendGameAction('quadmatch_play_again', { hands: newHands });
+      setHands(newHands);
+      setCurrentRound(1);
+      setSelectedCardIndex(null);
+      setWinner(null);
+      setRankings([]);
+      setMatchHistory([]);
+      cardReceivedRef.current = { south: 0, west: 0, north: 0, east: 0 };
+      setGamePhase('playing');
+    } else {
+      startGame();
+    }
   };
 
   const newGame = () => {

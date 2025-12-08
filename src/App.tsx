@@ -608,6 +608,17 @@ const App: React.FC = () => {
   const timerIntervalRef = useRef<number | null>(null);
   const [isMultiplayerMode, setIsMultiplayerMode] = useState(false);
   const myMultiplayerGameIndexRef = useRef<number>(-1);
+  const quadMatchActionCallbackRef = useRef<((data: { action: string; data: any }) => void) | null>(null);
+
+  const getMyQuadMatchPosition = useCallback(() => {
+    const positionMap: Record<number, 'south' | 'west' | 'north' | 'east'> = {
+      0: 'south',
+      1: 'west', 
+      2: 'north',
+      3: 'east'
+    };
+    return positionMap[myMultiplayerGameIndexRef.current] || 'south';
+  }, []);
 
   const handleGameStateUpdate = useCallback((data: { gameState: any }) => {
     console.log('Received game state update from other player:', data.gameState);
@@ -642,6 +653,59 @@ const App: React.FC = () => {
         phase: phase || prev.phase,
         players: players || prev.players,
       }));
+    } else if (data.action === 'thief_police_round_start') {
+      const { players, policeTask, policePlayerIndex, phase } = data.data;
+      setGameState(prev => ({
+        ...prev,
+        players: players || prev.players,
+        policeTask,
+        policePlayerIndex,
+        policeSelection: -1,
+        policeGuessWasCorrect: null,
+        phase: phase || prev.phase,
+      }));
+      setIsTaskRevealed(false);
+    } else if (data.action === 'thief_police_task_revealed') {
+      setIsTaskRevealed(true);
+    } else if (data.action === 'thief_police_task_done') {
+      setGameState(prev => ({ ...prev, phase: GamePhase.POLICE_SELECTION }));
+    } else if (data.action === 'thief_police_selection') {
+      const { targetIndex, phase } = data.data;
+      setGameState(prev => ({
+        ...prev,
+        policeSelection: targetIndex,
+        phase: phase || prev.phase,
+      }));
+    } else if (data.action === 'thief_police_verdict') {
+      const { players, policeGuessWasCorrect, phase } = data.data;
+      setGameState(prev => ({
+        ...prev,
+        players: players || prev.players,
+        policeGuessWasCorrect,
+        phase: phase || prev.phase,
+      }));
+    } else if (data.action === 'thief_police_round_results') {
+      setGameState(prev => ({ ...prev, phase: GamePhase.ROUND_RESULTS }));
+    } else if (data.action === 'thief_police_next_round') {
+      const { currentRound, phase } = data.data;
+      setGameState(prev => ({
+        ...prev,
+        currentRound,
+        phase: phase || GamePhase.ASSIGN_ROLES,
+        policeTask: null,
+        policePlayerIndex: -1,
+        policeSelection: -1,
+        policeGuessWasCorrect: null,
+      }));
+    } else if (
+      data.action === 'quadmatch_game_started' ||
+      data.action === 'quadmatch_card_selected' ||
+      data.action === 'quadmatch_cards_passed' ||
+      data.action === 'quadmatch_play_again'
+    ) {
+      if (quadMatchActionCallbackRef.current) {
+        quadMatchActionCallbackRef.current({ action: data.action, data: data.data });
+      }
     }
   }, []);
 
@@ -967,13 +1031,22 @@ const App: React.FC = () => {
     }));
   };
 
+  const isHostRef = useRef(false);
+  
+  useEffect(() => {
+    if (multiplayerState.room && multiplayerState.playerId) {
+      isHostRef.current = multiplayerState.room.hostId === multiplayerState.playerId;
+    }
+  }, [multiplayerState.room, multiplayerState.playerId]);
+
   const startRound = useCallback(() => {
     playSfx(ROLE_REVEAL_SFX_URL);
 
     if (gameState.gameId === GameId.COLOR_WAR) {
+      const newBoard = initColorWarBoard();
       setGameState(prev => ({
         ...prev,
-        board: initColorWarBoard(),
+        board: newBoard,
         activePlayerId: 1,
         selectedCell: null,
         phase: GamePhase.PLAYING,
@@ -1011,6 +1084,12 @@ const App: React.FC = () => {
       return;
     }
 
+    if (gameState.gameId === GameId.THIEF_POLICE && isMultiplayerMode && multiplayerState.isConnected) {
+      if (!isHostRef.current) {
+        return;
+      }
+    }
+
     const gameDef = GAMES[gameState.gameId];
     const roles: string[] = [...gameDef.roles];
     for (let i = roles.length - 1; i > 0; i--) {
@@ -1018,42 +1097,50 @@ const App: React.FC = () => {
       [roles[i], roles[j]] = [roles[j], roles[i]];
     }
 
-    setGameState(prev => {
-      let task = null;
-      if (prev.gameId === GameId.THIEF_POLICE) {
-        task = prev.currentRound % 2 !== 0 ? 'Thief' : 'Robber';
+    let task: string | null = null;
+    if (gameState.gameId === GameId.THIEF_POLICE) {
+      task = gameState.currentRound % 2 !== 0 ? 'Thief' : 'Robber';
+    }
+
+    const newPlayers = gameState.players.map((p, i) => {
+      const role = roles[i];
+      let roundPoints = 0;
+      let totalScore = p.totalScore;
+      if (gameState.gameId === GameId.THIEF_POLICE && role === 'Owner') {
+        roundPoints = gameDef.points['OWNER'];
+        totalScore += gameDef.points['OWNER'];
       }
+      return { ...p, currentRole: role, roundPoints: roundPoints, totalScore: totalScore };
+    });
 
-      const newPlayers = prev.players.map((p, i) => {
-        const role = roles[i];
-        let roundPoints = 0;
-        let totalScore = p.totalScore;
-        if (prev.gameId === GameId.THIEF_POLICE && role === 'Owner') {
-          roundPoints = gameDef.points['OWNER'];
-          totalScore += gameDef.points['OWNER'];
-        }
-        return { ...p, currentRole: role, roundPoints: roundPoints, totalScore: totalScore };
-      });
+    let policeIndex = -1;
+    if (gameState.gameId === GameId.THIEF_POLICE) {
+      policeIndex = newPlayers.findIndex(p => p.currentRole === 'Police');
+    }
 
-      let policeIndex = -1;
-      if (prev.gameId === GameId.THIEF_POLICE) {
-        policeIndex = newPlayers.findIndex(p => p.currentRole === 'Police');
-      }
-
-      const nextPhase = gameDef.hasInteractionPhase ? GamePhase.POLICE_TASK : GamePhase.ROUND_RESULTS;
-      return {
-        ...prev,
+    const nextPhase = gameDef.hasInteractionPhase ? GamePhase.POLICE_TASK : GamePhase.ROUND_RESULTS;
+    
+    if (isMultiplayerMode && multiplayerState.isConnected && gameState.gameId === GameId.THIEF_POLICE) {
+      sendGameAction('thief_police_round_start', {
         players: newPlayers,
         policeTask: task,
         policePlayerIndex: policeIndex,
-        policeSelection: -1,
-        policeGuessWasCorrect: null,
-        phase: nextPhase
-      };
-    });
+        phase: nextPhase,
+      });
+    }
+
+    setGameState(prev => ({
+      ...prev,
+      players: newPlayers,
+      policeTask: task,
+      policePlayerIndex: policeIndex,
+      policeSelection: -1,
+      policeGuessWasCorrect: null,
+      phase: nextPhase
+    }));
     
     setIsTaskRevealed(false);
-  }, [gameState.gameId, playSfx]);
+  }, [gameState.gameId, gameState.currentRound, gameState.players, playSfx, isMultiplayerMode, multiplayerState.isConnected, sendGameAction]);
 
   useEffect(() => {
     if (gameState.phase === GamePhase.ASSIGN_ROLES) {
@@ -1081,6 +1168,13 @@ const App: React.FC = () => {
 
   const handlePoliceSelection = useCallback((targetIndex: number) => {
     playSfx(SELECT_SFX_URL);
+
+    if (isMultiplayerMode && multiplayerState.isConnected) {
+      sendGameAction('thief_police_selection', {
+        targetIndex,
+        phase: GamePhase.REVEALING,
+      });
+    }
 
     setGameState(prev => {
       if (prev.phase !== GamePhase.POLICE_SELECTION) return prev;
@@ -1118,16 +1212,27 @@ const App: React.FC = () => {
           }
           return p;
         });
+
+        if (isMultiplayerMode && multiplayerState.isConnected) {
+          sendGameAction('thief_police_verdict', {
+            players: updatedPlayers,
+            policeGuessWasCorrect: isCorrect,
+            phase: GamePhase.VERDICT,
+          });
+        }
   
         return { ...prev, players: updatedPlayers, policeGuessWasCorrect: isCorrect, phase: GamePhase.VERDICT };
       });
 
       setTimeout(() => {
         playSfx(ROUND_END_SFX_URL);
+        if (isMultiplayerMode && multiplayerState.isConnected) {
+          sendGameAction('thief_police_round_results', {});
+        }
         setGameState(prev => ({ ...prev, phase: GamePhase.ROUND_RESULTS }));
       }, 3500);
     }, 2000);
-  }, [playSfx]);
+  }, [playSfx, isMultiplayerMode, multiplayerState.isConnected, sendGameAction]);
 
   const WINNING_LINES = [
     [0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -1392,14 +1497,31 @@ const App: React.FC = () => {
 
   const handlePoliceTaskConfirm = () => {
     playSfx(SELECT_SFX_URL);
+    if (isMultiplayerMode && multiplayerState.isConnected) {
+      sendGameAction('thief_police_task_revealed', {});
+    }
     setIsTaskRevealed(true);
   };
 
   const handlePoliceTaskDone = () => {
+    if (isMultiplayerMode && multiplayerState.isConnected) {
+      sendGameAction('thief_police_task_done', {});
+    }
     setGameState(prev => ({ ...prev, phase: GamePhase.POLICE_SELECTION }));
   };
 
   const handleNextRound = () => {
+    const nextRound = gameState.currentRound + 1;
+    const isGameOver = gameState.currentRound >= gameState.maxRounds;
+    const nextPhase = isGameOver ? GamePhase.LEADERBOARD : GamePhase.ASSIGN_ROLES;
+
+    if (isMultiplayerMode && multiplayerState.isConnected && !isGameOver) {
+      sendGameAction('thief_police_next_round', {
+        currentRound: nextRound,
+        phase: nextPhase,
+      });
+    }
+
     setGameState(prev => {
       if (prev.currentRound >= prev.maxRounds) {
         return { ...prev, phase: GamePhase.LEADERBOARD };
@@ -1524,13 +1646,37 @@ const App: React.FC = () => {
     
     if (gameState.phase === GamePhase.SETUP) {
       if (gameState.gameId === GameId.QUAD_MATCH) {
-        return <QuadMatchRoyale onExit={handleGoHome} />;
+        const isQuadMatchHost = isMultiplayerMode && multiplayerState.room 
+          ? multiplayerState.room.hostId === multiplayerState.playerId 
+          : true;
+        return (
+          <QuadMatchRoyale 
+            onExit={handleGoHome}
+            isMultiplayer={isMultiplayerMode && multiplayerState.isConnected}
+            sendGameAction={sendGameAction}
+            myPosition={getMyQuadMatchPosition()}
+            isHost={isQuadMatchHost}
+            onGameAction={(callback) => { quadMatchActionCallbackRef.current = callback; }}
+          />
+        );
       }
       return <SetupScreen gameName={currentGame.title} gameId={gameState.gameId} onStart={initGame} onBack={handleGoHome} backgroundImage={redSuitBackground} />;
     }
     
     if (gameState.gameId === GameId.QUAD_MATCH && gameState.phase === GamePhase.PLAYING) {
-      return <QuadMatchRoyale onExit={handleGoHome} />;
+      const isQuadMatchHost = isMultiplayerMode && multiplayerState.room 
+        ? multiplayerState.room.hostId === multiplayerState.playerId 
+        : true;
+      return (
+        <QuadMatchRoyale 
+          onExit={handleGoHome}
+          isMultiplayer={isMultiplayerMode && multiplayerState.isConnected}
+          sendGameAction={sendGameAction}
+          myPosition={getMyQuadMatchPosition()}
+          isHost={isQuadMatchHost}
+          onGameAction={(callback) => { quadMatchActionCallbackRef.current = callback; }}
+        />
+      );
     }
     
     if (gameState.phase === GamePhase.LEADERBOARD) {
