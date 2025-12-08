@@ -204,3 +204,18 @@ Preferred communication style: Simple, everyday language.
 ### Space Race Game Unlocked
 - Removed `isComingSoon: true` flag from Space Race game definition in constants.ts
 - Game is now playable from the game selection screen
+
+### QuadMatch Royale Complete Game Rebuild
+- **Complete code rewrite**: Rebuilt QuadMatchRoyale.tsx from scratch with all three game phases (setup, playing, gameOver)
+- **Setup Phase**: 4 name inputs with validation, preset themes (Animals, Cities, Movies), disabled start button until names are valid
+- **Playing Phase**: Compass layout (South=You, West=Player 2, North=Player 3, East=Player 4) with face-up cards for player, face-down for AI
+- **AI Strategy Implementation**:
+  - Priority 1: Keep 3-of-a-kind (pass singleton with highest index)
+  - Priority 2: Keep pairs (pass from non-pair cards with highest index)
+  - Priority 3: Pass least frequent card type (highest index as tie-breaker)
+  - Deterministic tie-breaking: Always pass card at highest array index (most recently received)
+- **Win Detection**: First player to collect 4 identical cards wins
+- **Ranking System**: 4-of-a-kind > 3-of-a-kind > 2-of-a-kind > no matches, ties broken by round when match was first achieved
+- **Match History**: Now tracks all match levels ≥1 (not just ≥2) for proper ranking tie-breaks
+- **Game Over Phase**: Winner celebration display, rankings for all players, statistics (rounds, cards passed), Play Again/Change Names buttons
+- **Multiplayer Support**: Preserved WebSocket handlers for game_started, card_selected, cards_passed, play_again actions
