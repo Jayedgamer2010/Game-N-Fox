@@ -193,3 +193,14 @@ Preferred communication style: Simple, everyday language.
 - **Ref-based callback pattern**: QuadMatchRoyale uses `quadMatchActionCallbackRef` in App.tsx to receive game actions from WebSocket handler
 - **Position mapping**: Added `getMyQuadMatchPosition()` function to map player index (0-3) to compass positions (south/west/north/east)
 - **Host detection consistency**: Both Thief & Police and QuadMatch use consistent host detection via room.hostId comparison
+
+### QuadMatch Royale Complete UI Rebuild
+- **New polished dark mode design**: Dark theme (#101622 background) with Spline Sans font and Material Symbols icons
+- **Compass layout**: Player hands arranged in North/South/East/West positions with proper rotation for side players
+- **Card color themes**: Ruby Red, Sapphire Blue, Emerald Green, and Amethyst Purple preset themes
+- **Module-scoped constants**: `POSITIONS` and `POSITION_LABELS` hoisted to module scope to prevent multiplayer event handler re-registration issues
+- **Optimized dependency arrays**: Removed stable constants from useEffect/useCallback dependency arrays to prevent unnecessary re-renders
+
+### Space Race Game Unlocked
+- Removed `isComingSoon: true` flag from Space Race game definition in constants.ts
+- Game is now playable from the game selection screen
