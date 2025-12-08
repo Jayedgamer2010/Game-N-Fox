@@ -1350,6 +1350,15 @@ const App: React.FC = () => {
     
     if (activePlayer.isAi) return;
 
+    // Multiplayer turn validation - only allow moves when it's this player's turn
+    if (isMultiplayerMode && multiplayerState.isConnected) {
+      const myGameIndex = myMultiplayerGameIndexRef.current;
+      // activePlayerId is 1-based, myGameIndex is 0-based
+      if (myGameIndex >= 0 && activeId !== myGameIndex + 1) {
+        return; // Not this player's turn
+      }
+    }
+
     if (cell === activeId) {
       setGameState(prev => ({
         ...prev,
