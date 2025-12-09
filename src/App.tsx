@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { GamePhase, Player, GameState, GameId } from './types';
 import { INITIAL_PLAYERS, MAX_ROUNDS, GAMES, ROTATIONS, PLAYER_DIRECTIONS, CONFETTI_COLORS, CONFETTI_SHAPES } from './constants';
 import redSuitBackground from '@assets/generated_images/red_suited_guard_figure.png';
+import backgroundMusicFile from '@assets/background-music.mp3';
 import QuadMatchRoyale from './QuadMatchRoyale';
 import {
   ModeSelectionScreen,
@@ -13,7 +14,7 @@ import {
   useWebSocket,
 } from './multiplayer';
 
-const BGM_URL = "https://cdn.pixabay.com/download/audio/2022/11/22/audio_febc508520.mp3?filename=fun-life-112188.mp3";
+const BGM_URL = backgroundMusicFile;
 const START_SFX_URL = "https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3";
 const ROLE_REVEAL_SFX_URL = "https://assets.mixkit.co/sfx/preview/mixkit-card-flip-2767.mp3";
 const SELECT_SFX_URL = "https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3";

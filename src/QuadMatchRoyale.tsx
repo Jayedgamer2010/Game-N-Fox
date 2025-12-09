@@ -56,6 +56,16 @@ const POSITION_NAMES: Record<Position, string> = {
   east: 'East',
 };
 
+const getRotatedPosition = (displayPosition: Position, myPosition: Position): Position => {
+  if (myPosition === 'south') return displayPosition;
+  
+  const positionOrder: Position[] = ['south', 'west', 'north', 'east'];
+  const myIndex = positionOrder.indexOf(myPosition);
+  const displayIndex = positionOrder.indexOf(displayPosition);
+  const actualIndex = (displayIndex + myIndex) % 4;
+  return positionOrder[actualIndex];
+};
+
 const shuffleArray = <T,>(array: T[]): T[] => {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -326,16 +336,28 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
     if (gameMode === 'offline' && currentTurn !== 'south') return;
     if (gameMode === 'multiplayer' && currentTurn !== myPosition) return;
     
+    const nextPlayer = getNextPlayer(currentTurn);
+    const cardToPass = hands[currentTurn][selectedCardIndex];
+    
+    const newHands = {
+      south: [...hands.south],
+      west: [...hands.west],
+      north: [...hands.north],
+      east: [...hands.east],
+    };
+    newHands[currentTurn].splice(selectedCardIndex, 1);
+    newHands[nextPlayer].push(cardToPass);
+    
     if (isMultiplayer && sendGameAction) {
       sendGameAction('quadmatch_card_passed', {
         position: myPosition,
         cardIndex: selectedCardIndex,
-        hands: hands
+        hands: newHands
       });
     }
     
     await executeCardPass(currentTurn, selectedCardIndex, hands);
-  }, [selectedCardIndex, gameMode, currentTurn, myPosition, isMultiplayer, sendGameAction, hands, executeCardPass]);
+  }, [selectedCardIndex, gameMode, currentTurn, myPosition, isMultiplayer, sendGameAction, hands, executeCardPass, getNextPlayer]);
 
   const processGameAction = useCallback((payload: { action: string; data: any }) => {
     const { action, data } = payload;
@@ -357,7 +379,94 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
 
       case 'quadmatch_card_passed':
         if (data.position !== myPosition) {
-          executeCardPass(data.position, data.cardIndex, data.hands, false);
+          if (isHostRef.current) {
+            const fromPlayer = data.position;
+            const cardIndex = data.cardIndex;
+            
+            if (fromPlayer !== currentTurn) {
+              console.warn(`Rejected out-of-turn pass from ${fromPlayer}, current turn is ${currentTurn}`);
+              return;
+            }
+            
+            if (passedInRound[fromPlayer]) {
+              console.warn(`Rejected duplicate pass from ${fromPlayer}`);
+              return;
+            }
+            
+            const nextPlayer = getNextPlayer(fromPlayer);
+            const cardToPass = hands[fromPlayer][cardIndex];
+            
+            if (!cardToPass) return;
+            
+            const newHands = {
+              south: [...hands.south],
+              west: [...hands.west],
+              north: [...hands.north],
+              east: [...hands.east],
+            };
+            newHands[fromPlayer].splice(cardIndex, 1);
+            newHands[nextPlayer].push(cardToPass);
+            
+            setHands(newHands);
+            setSelectedCardIndex(null);
+            
+            const newPassedInRound = { ...passedInRound, [fromPlayer]: true };
+            setPassedInRound(newPassedInRound);
+            
+            const allPassed = POSITIONS.every(p => newPassedInRound[p]);
+            
+            if (allPassed) {
+              let newHistory = [...matchHistory];
+              POSITIONS.forEach(pos => {
+                const level = getMatchLevel(newHands[pos]);
+                const existingEntry = newHistory.find(h => h.position === pos && h.matchLevel === level);
+                if (!existingEntry && level >= 1) {
+                  newHistory.push({ position: pos, matchLevel: level, round: currentRound });
+                }
+              });
+              setMatchHistory(newHistory);
+              
+              const winnerPos = checkForWinner(newHands);
+              
+              if (winnerPos) {
+                const finalRankings = calculateRankings(newHands, winnerPos, newHistory);
+                setWinner(winnerPos);
+                setRankings(finalRankings);
+                setGamePhase('gameOver');
+                
+                if (sendGameAction) {
+                  sendGameAction('quadmatch_game_over', {
+                    winner: winnerPos,
+                    rankings: finalRankings,
+                    hands: newHands
+                  });
+                }
+              } else {
+                setCurrentRound(prev => prev + 1);
+                setPassedInRound({ south: false, west: false, north: false, east: false });
+                setCurrentTurn('south');
+                setTurnPhase('selecting');
+                
+                if (sendGameAction) {
+                  sendGameAction('quadmatch_round_complete', {
+                    hands: newHands,
+                    round: currentRound + 1
+                  });
+                }
+              }
+            } else {
+              setCurrentTurn(nextPlayer);
+              setTurnPhase('selecting');
+              
+              if (sendGameAction) {
+                sendGameAction('quadmatch_turn_change', {
+                  currentTurn: nextPlayer,
+                  hands: newHands,
+                  passedInRound: newPassedInRound
+                });
+              }
+            }
+          }
         }
         break;
 
@@ -396,7 +505,7 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
         setGamePhase('playing');
         break;
     }
-  }, [myPosition, executeCardPass]);
+  }, [myPosition, getNextPlayer, passedInRound, checkForWinner, calculateRankings, matchHistory, currentRound, sendGameAction, hands, currentTurn]);
 
   useEffect(() => {
     if (!isMultiplayer || !onGameAction) return;
@@ -891,6 +1000,16 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
     const myHand = gameMode === 'offline' ? hands.south : hands[myPosition];
     const canPassCard = isMyTurn() && selectedCardIndex !== null && turnPhase === 'selecting';
 
+    const getDisplayPosition = (displayPos: Position): Position => {
+      if (gameMode === 'offline') return displayPos;
+      return getRotatedPosition(displayPos, myPosition);
+    };
+
+    const northPos = getDisplayPosition('north');
+    const westPos = getDisplayPosition('west');
+    const eastPos = getDisplayPosition('east');
+    const southPos = getDisplayPosition('south');
+
     return (
       <div className="relative flex min-h-screen w-full flex-col bg-[#101622] p-2 sm:p-4">
         {showQuitConfirm && <QuitConfirmationPopup />}
@@ -914,13 +1033,13 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
         <div className="flex-1 flex flex-col justify-between max-w-lg mx-auto w-full">
           <div className="flex flex-col items-center py-2">
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-gray-400 text-xs font-medium">{getPositionLabel('north', false)}</span>
-              {renderTurnIndicator('north')}
+              <span className="text-gray-400 text-xs font-medium">{getPositionLabel(northPos, false)}</span>
+              {renderTurnIndicator(northPos)}
             </div>
             <div className="flex gap-1">
-              {hands.north.map((card, idx) => (
+              {hands[northPos].map((card, idx) => (
                 <div key={`north-${idx}`} className="w-8">
-                  {isMyPosition('north') ? renderMiniCard(card, idx) : renderMiniCardBack(idx)}
+                  {isMyPosition(northPos) ? renderMiniCard(card, idx) : renderMiniCardBack(idx)}
                 </div>
               ))}
             </div>
@@ -929,13 +1048,13 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
           <div className="flex justify-between items-center py-2">
             <div className="flex flex-col items-center">
               <div className="flex items-center gap-1 mb-1">
-                <span className="text-gray-400 text-xs font-medium">{getPositionLabel('west', false)}</span>
+                <span className="text-gray-400 text-xs font-medium">{getPositionLabel(westPos, false)}</span>
               </div>
-              {renderTurnIndicator('west')}
+              {renderTurnIndicator(westPos)}
               <div className="flex gap-1 mt-1">
-                {hands.west.map((card, idx) => (
+                {hands[westPos].map((card, idx) => (
                   <div key={`west-${idx}`} className="w-6 sm:w-8">
-                    {isMyPosition('west') ? renderMiniCard(card, idx) : renderMiniCardBack(idx)}
+                    {isMyPosition(westPos) ? renderMiniCard(card, idx) : renderMiniCardBack(idx)}
                   </div>
                 ))}
               </div>
@@ -949,22 +1068,22 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
               </div>
               {passingCard && (
                 <div className="mt-2 flex items-center gap-2 text-sm text-blue-400 animate-pulse">
-                  <span>{POSITION_NAMES[passingCard.from]}</span>
+                  <span>{getPositionLabel(passingCard.from, false)}</span>
                   <span className="material-symbols-outlined text-lg">arrow_forward</span>
-                  <span>{POSITION_NAMES[passingCard.to]}</span>
+                  <span>{getPositionLabel(passingCard.to, false)}</span>
                 </div>
               )}
             </div>
 
             <div className="flex flex-col items-center">
               <div className="flex items-center gap-1 mb-1">
-                <span className="text-gray-400 text-xs font-medium">{getPositionLabel('east', false)}</span>
+                <span className="text-gray-400 text-xs font-medium">{getPositionLabel(eastPos, false)}</span>
               </div>
-              {renderTurnIndicator('east')}
+              {renderTurnIndicator(eastPos)}
               <div className="flex gap-1 mt-1">
-                {hands.east.map((card, idx) => (
+                {hands[eastPos].map((card, idx) => (
                   <div key={`east-${idx}`} className="w-6 sm:w-8">
-                    {isMyPosition('east') ? renderMiniCard(card, idx) : renderMiniCardBack(idx)}
+                    {isMyPosition(eastPos) ? renderMiniCard(card, idx) : renderMiniCardBack(idx)}
                   </div>
                 ))}
               </div>
@@ -973,8 +1092,8 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
 
           <div className="flex flex-col items-center py-4">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-white text-lg font-bold">{getPositionLabel(gameMode === 'offline' ? 'south' : myPosition)}</span>
-              {renderTurnIndicator(gameMode === 'offline' ? 'south' : myPosition)}
+              <span className="text-white text-lg font-bold">{gameMode === 'offline' ? 'You' : 'You'}</span>
+              {renderTurnIndicator(southPos)}
             </div>
             <div className="flex gap-2 sm:gap-3 justify-center">
               {myHand.map((card, idx) => (

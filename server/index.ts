@@ -15,6 +15,9 @@ interface Player {
   isReady: boolean;
 }
 
+type Position = 'south' | 'west' | 'north' | 'east';
+const POSITION_ORDER: Position[] = ['south', 'west', 'north', 'east'];
+
 interface GameRoom {
   id: string;
   code: string;
@@ -29,6 +32,7 @@ interface GameRoom {
   status: 'waiting' | 'starting' | 'playing' | 'finished';
   gameState: any;
   createdAt: Date;
+  playerPositions: Map<string, Position>;
 }
 
 const rooms: Map<string, GameRoom> = new Map();
@@ -141,6 +145,9 @@ wss.on('connection', (socket) => {
         case 'create_room': {
           const code = generateRoomCode();
           const roomId = uuidv4();
+          const playerPositions = new Map<string, Position>();
+          playerPositions.set(playerId, 'south');
+          
           const room: GameRoom = {
             id: roomId,
             code,
@@ -161,6 +168,7 @@ wss.on('connection', (socket) => {
             status: 'waiting',
             gameState: null,
             createdAt: new Date(),
+            playerPositions,
           };
 
           rooms.set(roomId, room);
@@ -220,6 +228,9 @@ wss.on('connection', (socket) => {
             isReady: false,
           };
 
+          const nextPosition = POSITION_ORDER[room.players.length];
+          room.playerPositions.set(playerId, nextPosition);
+          
           room.players.push(player);
           playerInfo.roomId = room.id;
 
@@ -309,9 +320,12 @@ wss.on('connection', (socket) => {
           const room = rooms.get(playerInfo.roomId);
           if (!room || room.status !== 'playing') break;
 
+          const senderPosition = room.playerPositions.get(playerId);
+          
           broadcastToRoom(room.id, {
             type: 'game_action',
             playerId,
+            senderPosition,
             action: message.action,
             data: message.data,
           }, playerId);

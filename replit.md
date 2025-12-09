@@ -8,7 +8,13 @@ The application is a single-page application (SPA) with distinct game phases inc
 
 ## Recent Changes
 
-**December 9, 2025:**
+**December 9, 2025 (Latest):**
+- Fixed multiplayer view rotation: each player now sees themselves at the bottom (South display position) with opponents correctly positioned around the table
+- Fixed realtime synchronization: card passes and turn changes now properly sync to all players in multiplayer mode
+- Changed background music to use a local MP3 file (`attached_assets/background-music.mp3`)
+- Added `getRotatedPosition()` function to properly map display positions to actual game positions based on player's seat
+
+**December 9, 2025 (Earlier):**
 - Fixed card visibility: players only see their own cards, other players' cards show as face-down (card backs with "?" symbol)
 - Complete rewrite of QuadMatch Royale with sequential card passing system
 - Added two game modes: Offline with AI (single player vs 3 AI opponents) and Multiplayer Online (4 real players)
