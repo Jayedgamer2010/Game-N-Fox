@@ -9,6 +9,9 @@ The application is a single-page application (SPA) with distinct game phases inc
 ## Recent Changes
 
 **December 9, 2025 (Latest):**
+- Added Google Gemini AI integration for smart AI card suggestions
+- AI API endpoint at `/api/ai/card-suggestion` with fallback logic
+- API key stored securely as GEMINI_API_KEY secret (works on Replit, Vercel, Netlify)
 - CRITICAL FIX: Fixed multiplayer state synchronization bug where only the host saw game state changes
 - Server now broadcasts state update actions (turn_change, round_complete, game_over, etc.) to ALL players including the sender
 - Non-host players now properly receive and apply state updates from the host's authoritative broadcasts

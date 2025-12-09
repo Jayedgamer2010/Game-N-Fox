@@ -447,6 +447,99 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', rooms: rooms.size });
 });
 
+app.use(express.json());
+
+app.post('/api/ai/card-suggestion', async (req, res) => {
+  try {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return res.status(503).json({ error: 'AI service not configured' });
+    }
+
+    const { hand, playerPosition, gameContext } = req.body;
+    if (!hand || !Array.isArray(hand)) {
+      return res.status(400).json({ error: 'Invalid request' });
+    }
+
+    const { GoogleGenAI } = await import('@google/genai');
+    const ai = new GoogleGenAI({ apiKey });
+
+    const handDescription = hand.map((card: any, idx: number) => `${idx}: ${card.name}`).join(", ");
+    
+    const prompt = `You are an expert card game AI for QuadMatch Royale.
+The goal is to collect 4 cards of the same type (4-of-a-kind).
+You must select one card to pass to the next player.
+
+Strategy:
+- Keep cards you have multiples of (pairs, triples)
+- Pass cards you only have one of (singletons)
+
+Your hand: [${handDescription}]
+Position: ${playerPosition || 'unknown'}
+${gameContext ? `Context: ${gameContext}` : ""}
+
+Which card index (0-${hand.length - 1}) should you pass? Respond with JSON:
+{"cardIndex": number, "reasoning": "brief explanation"}`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      config: {
+        responseMimeType: "application/json",
+      },
+      contents: prompt,
+    });
+
+    const rawJson = response.text;
+    if (rawJson) {
+      const data = JSON.parse(rawJson);
+      return res.json(data);
+    }
+    
+    return res.json(getFallbackSuggestion(hand));
+  } catch (error) {
+    console.error('AI suggestion error:', error);
+    return res.json(getFallbackSuggestion(req.body?.hand || []));
+  }
+});
+
+function getFallbackSuggestion(hand: { name: string }[]): { cardIndex: number; reasoning: string } {
+  if (!hand || hand.length === 0) {
+    return { cardIndex: 0, reasoning: "No hand provided" };
+  }
+  
+  const counts: Record<string, number> = {};
+  hand.forEach(card => {
+    counts[card.name] = (counts[card.name] || 0) + 1;
+  });
+
+  const hasThreeOrMore = Object.entries(counts).find(([_, count]) => count >= 3);
+  if (hasThreeOrMore) {
+    const [threeName] = hasThreeOrMore;
+    const singletonIdx = hand.findIndex(card => card.name !== threeName);
+    if (singletonIdx !== -1) {
+      return { cardIndex: singletonIdx, reasoning: "Keeping triple, passing singleton" };
+    }
+  }
+
+  const hasPair = Object.entries(counts).find(([_, count]) => count >= 2);
+  if (hasPair) {
+    const [pairName] = hasPair;
+    const nonPairIdx = hand.findIndex(card => card.name !== pairName);
+    if (nonPairIdx !== -1) {
+      return { cardIndex: nonPairIdx, reasoning: "Keeping pair, passing non-pair" };
+    }
+  }
+
+  return { cardIndex: 0, reasoning: "No matches, passing first card" };
+}
+
+app.get('/api/ai/status', (req, res) => {
+  res.json({ 
+    configured: !!process.env.GEMINI_API_KEY,
+    model: 'gemini-2.5-flash'
+  });
+});
+
 const PORT = 3001;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Game server running on port ${PORT}`);
