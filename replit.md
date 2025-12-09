@@ -8,11 +8,18 @@ The application is a single-page application (SPA) with distinct game phases inc
 
 ## Recent Changes
 
+**December 9, 2025:**
+- Complete rewrite of QuadMatch Royale with sequential card passing system
+- Added two game modes: Offline with AI (single player vs 3 AI opponents) and Multiplayer Online (4 real players)
+- Sequential turn order: South → West → North → East (not simultaneous anymore)
+- Each player receives card from previous player (5 cards), selects 1 to pass (back to 4 cards)
+- AI logic with smart card selection (keeps pairs/triples, passes singletons)
+- Host-authoritative multiplayer synchronization to prevent echo storms
+- Turn indicators showing current turn, passed status, and waiting states
+- Mode selection screen added for offline play
+
 **December 8, 2025:**
 - Fixed critical UI bug in QuadMatch Royale multiplayer mode where the wrong game interface was displayed
-- Issue: When starting an online multiplayer game for QuadMatch Royale, the game was incorrectly showing the "Thief and Police" style 4-player card grid (light theme with Player 1-4 cards showing points) instead of the proper QuadMatch Royale dark-themed card passing interface
-- Root cause: The multiplayer game start logic was unconditionally setting the game phase to `ASSIGN_ROLES` for all games, which is correct for role-based games but not for QuadMatch Royale
-- Fix: Modified `App.tsx` to check if the game is QuadMatch Royale and route to `SETUP` phase instead, allowing the dedicated `QuadMatchRoyale` component to render with its proper dark-themed UI
 
 ## User Preferences
 
