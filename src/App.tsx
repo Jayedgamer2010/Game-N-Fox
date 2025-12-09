@@ -611,16 +611,6 @@ const App: React.FC = () => {
   const myMultiplayerGameIndexRef = useRef<number>(-1);
   const quadMatchActionCallbackRef = useRef<((data: { action: string; data: any }) => void) | null>(null);
 
-  const getMyQuadMatchPosition = useCallback(() => {
-    const positionMap: Record<number, 'south' | 'west' | 'north' | 'east'> = {
-      0: 'south',
-      1: 'west', 
-      2: 'north',
-      3: 'east'
-    };
-    return positionMap[myMultiplayerGameIndexRef.current] || 'south';
-  }, []);
-
   const handleGameStateUpdate = useCallback((data: { gameState: any }) => {
     console.log('Received game state update from other player:', data.gameState);
     setGameState(prev => ({
@@ -728,6 +718,22 @@ const App: React.FC = () => {
     onGameStateUpdate: handleGameStateUpdate,
     onGameAction: handleGameAction,
   });
+
+  const getMyQuadMatchPosition = useCallback((): 'south' | 'west' | 'north' | 'east' => {
+    if (multiplayerState.room?.playerPositions && multiplayerState.playerId) {
+      const position = multiplayerState.room.playerPositions[multiplayerState.playerId];
+      if (position) return position;
+    }
+    const myPlayer = multiplayerState.room?.players.find(p => p.id === multiplayerState.playerId);
+    if (myPlayer?.position) return myPlayer.position;
+    const positionMap: Record<number, 'south' | 'west' | 'north' | 'east'> = {
+      0: 'south',
+      1: 'west', 
+      2: 'north',
+      3: 'east'
+    };
+    return positionMap[myMultiplayerGameIndexRef.current] || 'south';
+  }, [multiplayerState.room, multiplayerState.playerId]);
 
   const currentGame = GAMES[gameState.gameId];
 

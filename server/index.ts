@@ -70,6 +70,11 @@ function sendToPlayer(socket: WebSocket, message: any) {
 }
 
 function getRoomInfo(room: GameRoom) {
+  const playerPositionsObj: Record<string, Position> = {};
+  room.playerPositions.forEach((pos, id) => {
+    playerPositionsObj[id] = pos;
+  });
+  
   return {
     id: room.id,
     code: room.code,
@@ -80,6 +85,7 @@ function getRoomInfo(room: GameRoom) {
       name: p.name,
       isHost: p.isHost,
       isReady: p.isReady,
+      position: room.playerPositions.get(p.id),
     })),
     maxPlayers: room.maxPlayers,
     isPublic: room.isPublic,
@@ -88,6 +94,7 @@ function getRoomInfo(room: GameRoom) {
     deckTheme: room.deckTheme,
     status: room.status,
     playerCount: room.players.length,
+    playerPositions: playerPositionsObj,
   };
 }
 

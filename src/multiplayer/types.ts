@@ -1,8 +1,11 @@
+export type GamePosition = 'south' | 'west' | 'north' | 'east';
+
 export interface MultiplayerPlayer {
   id: string;
   name: string;
   isHost: boolean;
   isReady: boolean;
+  position?: GamePosition;
 }
 
 export interface RoomInfo {
@@ -18,6 +21,7 @@ export interface RoomInfo {
   deckTheme: string;
   status: 'waiting' | 'starting' | 'playing' | 'finished';
   playerCount: number;
+  playerPositions?: Record<string, GamePosition>;
 }
 
 export type MultiplayerMode = 'offline' | 'online';

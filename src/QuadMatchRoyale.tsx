@@ -466,6 +466,8 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
                 });
               }
             }
+          } else if (data.hands) {
+            setHands(data.hands);
           }
         }
         break;
