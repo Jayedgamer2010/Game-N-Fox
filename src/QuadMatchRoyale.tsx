@@ -301,7 +301,8 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
         sendGameAction('quadmatch_turn_change', {
           currentTurn: nextPlayer,
           hands: newHands,
-          passedInRound: newPassedInRound
+          passedInRound: newPassedInRound,
+          passingCard: { from: fromPlayer, to: nextPlayer, card: cardToPass }
         });
       }
     }
@@ -336,34 +337,30 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
     if (gameMode === 'offline' && currentTurn !== 'south') return;
     if (gameMode === 'multiplayer' && currentTurn !== myPosition) return;
     
-    const nextPlayer = getNextPlayer(currentTurn);
-    const cardToPass = hands[currentTurn][selectedCardIndex];
-    
-    const newHands = {
-      south: [...hands.south],
-      west: [...hands.west],
-      north: [...hands.north],
-      east: [...hands.east],
-    };
-    newHands[currentTurn].splice(selectedCardIndex, 1);
-    newHands[nextPlayer].push(cardToPass);
-    
-    if (isMultiplayer && sendGameAction) {
-      sendGameAction('quadmatch_card_passed', {
-        position: myPosition,
-        cardIndex: selectedCardIndex,
-        hands: newHands
-      });
+    if (gameMode === 'multiplayer') {
+      if (isHost) {
+        await executeCardPass(currentTurn, selectedCardIndex, hands, true);
+      } else {
+        if (sendGameAction) {
+          sendGameAction('quadmatch_card_passed', {
+            position: myPosition,
+            cardIndex: selectedCardIndex
+          });
+        }
+      }
+    } else {
+      await executeCardPass(currentTurn, selectedCardIndex, hands, false);
     }
-    
-    await executeCardPass(currentTurn, selectedCardIndex, hands);
-  }, [selectedCardIndex, gameMode, currentTurn, myPosition, isMultiplayer, sendGameAction, hands, executeCardPass, getNextPlayer]);
+  }, [selectedCardIndex, gameMode, currentTurn, myPosition, isMultiplayer, sendGameAction, hands, executeCardPass, isHost]);
 
   const processGameAction = useCallback((payload: { action: string; data: any }) => {
     const { action, data } = payload;
     
+    console.log(`[${myPosition}] Received action: ${action}`, data);
+    
     switch (action) {
       case 'quadmatch_game_started':
+        console.log(`[${myPosition}] Game started, applying hands:`, data.hands);
         setHands(data.hands);
         setPlayerNames(data.playerNames);
         setCurrentRound(1);
@@ -378,116 +375,144 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
         break;
 
       case 'quadmatch_card_passed':
-        if (data.position !== myPosition) {
-          if (isHostRef.current) {
-            const fromPlayer = data.position;
-            const cardIndex = data.cardIndex;
-            
-            if (fromPlayer !== currentTurn) {
-              console.warn(`Rejected out-of-turn pass from ${fromPlayer}, current turn is ${currentTurn}`);
-              return;
-            }
-            
-            if (passedInRound[fromPlayer]) {
-              console.warn(`Rejected duplicate pass from ${fromPlayer}`);
-              return;
-            }
-            
-            const nextPlayer = getNextPlayer(fromPlayer);
-            const cardToPass = hands[fromPlayer][cardIndex];
-            
-            if (!cardToPass) return;
-            
-            const newHands = {
-              south: [...hands.south],
-              west: [...hands.west],
-              north: [...hands.north],
-              east: [...hands.east],
-            };
-            newHands[fromPlayer].splice(cardIndex, 1);
-            newHands[nextPlayer].push(cardToPass);
-            
-            setHands(newHands);
-            setSelectedCardIndex(null);
-            
-            const newPassedInRound = { ...passedInRound, [fromPlayer]: true };
-            setPassedInRound(newPassedInRound);
-            
-            const allPassed = POSITIONS.every(p => newPassedInRound[p]);
-            
-            if (allPassed) {
-              let newHistory = [...matchHistory];
-              POSITIONS.forEach(pos => {
-                const level = getMatchLevel(newHands[pos]);
-                const existingEntry = newHistory.find(h => h.position === pos && h.matchLevel === level);
-                if (!existingEntry && level >= 1) {
-                  newHistory.push({ position: pos, matchLevel: level, round: currentRound });
-                }
-              });
-              setMatchHistory(newHistory);
-              
-              const winnerPos = checkForWinner(newHands);
-              
-              if (winnerPos) {
-                const finalRankings = calculateRankings(newHands, winnerPos, newHistory);
-                setWinner(winnerPos);
-                setRankings(finalRankings);
-                setGamePhase('gameOver');
-                
-                if (sendGameAction) {
-                  sendGameAction('quadmatch_game_over', {
-                    winner: winnerPos,
-                    rankings: finalRankings,
-                    hands: newHands
-                  });
-                }
-              } else {
-                setCurrentRound(prev => prev + 1);
-                setPassedInRound({ south: false, west: false, north: false, east: false });
-                setCurrentTurn('south');
-                setTurnPhase('selecting');
-                
-                if (sendGameAction) {
-                  sendGameAction('quadmatch_round_complete', {
-                    hands: newHands,
-                    round: currentRound + 1
-                  });
-                }
+        if (isHostRef.current && data.position !== myPosition) {
+          const fromPlayer = data.position as Position;
+          const cardIndex = data.cardIndex;
+          
+          console.log(`[HOST] Processing card pass from ${fromPlayer}, cardIndex: ${cardIndex}`);
+          
+          if (fromPlayer !== currentTurn) {
+            console.warn(`[HOST] Rejected out-of-turn pass from ${fromPlayer}, current turn is ${currentTurn}`);
+            return;
+          }
+          
+          if (passedInRound[fromPlayer]) {
+            console.warn(`[HOST] Rejected duplicate pass from ${fromPlayer}`);
+            return;
+          }
+          
+          const nextPlayer = getNextPlayer(fromPlayer);
+          const cardToPass = hands[fromPlayer][cardIndex];
+          
+          if (!cardToPass) {
+            console.warn(`[HOST] No card found at index ${cardIndex} for ${fromPlayer}`);
+            return;
+          }
+          
+          const newHands = {
+            south: [...hands.south],
+            west: [...hands.west],
+            north: [...hands.north],
+            east: [...hands.east],
+          };
+          newHands[fromPlayer].splice(cardIndex, 1);
+          newHands[nextPlayer].push(cardToPass);
+          
+          const newPassedInRound = { ...passedInRound, [fromPlayer]: true };
+          const allPassed = POSITIONS.every(p => newPassedInRound[p]);
+          
+          if (allPassed) {
+            let newHistory = [...matchHistory];
+            POSITIONS.forEach(pos => {
+              const level = getMatchLevel(newHands[pos]);
+              const existingEntry = newHistory.find(h => h.position === pos && h.matchLevel === level);
+              if (!existingEntry && level >= 1) {
+                newHistory.push({ position: pos, matchLevel: level, round: currentRound });
               }
-            } else {
-              setCurrentTurn(nextPlayer);
-              setTurnPhase('selecting');
+            });
+            setMatchHistory(newHistory);
+            
+            const winnerPos = checkForWinner(newHands);
+            
+            if (winnerPos) {
+              const finalRankings = calculateRankings(newHands, winnerPos, newHistory);
+              
+              setHands(newHands);
+              setWinner(winnerPos);
+              setRankings(finalRankings);
+              setPassedInRound(newPassedInRound);
+              setGamePhase('gameOver');
               
               if (sendGameAction) {
-                sendGameAction('quadmatch_turn_change', {
-                  currentTurn: nextPlayer,
+                sendGameAction('quadmatch_game_over', {
+                  winner: winnerPos,
+                  rankings: finalRankings,
+                  hands: newHands
+                });
+              }
+            } else {
+              const newRound = currentRound + 1;
+              
+              setHands(newHands);
+              setCurrentRound(newRound);
+              setPassedInRound({ south: false, west: false, north: false, east: false });
+              setCurrentTurn('south');
+              setTurnPhase('selecting');
+              setSelectedCardIndex(null);
+              
+              if (sendGameAction) {
+                sendGameAction('quadmatch_round_complete', {
                   hands: newHands,
-                  passedInRound: newPassedInRound
+                  round: newRound
                 });
               }
             }
-          } else if (data.hands) {
-            setHands(data.hands);
+          } else {
+            setHands(newHands);
+            setCurrentTurn(nextPlayer);
+            setPassedInRound(newPassedInRound);
+            setTurnPhase('selecting');
+            setSelectedCardIndex(null);
+            
+            if (sendGameAction) {
+              console.log(`[HOST] Broadcasting turn change to ${nextPlayer}`, newHands);
+              sendGameAction('quadmatch_turn_change', {
+                currentTurn: nextPlayer,
+                hands: newHands,
+                passedInRound: newPassedInRound,
+                passingCard: { from: fromPlayer, to: nextPlayer, card: cardToPass }
+              });
+            }
           }
         }
         break;
 
       case 'quadmatch_turn_change':
-        setCurrentTurn(data.currentTurn);
-        setHands(data.hands);
-        setPassedInRound(data.passedInRound);
-        setTurnPhase('selecting');
+        console.log(`[${myPosition}] Turn change received:`, data);
+        if (data.passingCard && !isHostRef.current) {
+          setPassingCard(data.passingCard);
+          setTurnPhase('passing');
+          setTimeout(() => {
+            setPassingCard(null);
+            setCurrentTurn(data.currentTurn);
+            setHands(data.hands);
+            setPassedInRound(data.passedInRound);
+            setTurnPhase('selecting');
+            setSelectedCardIndex(null);
+          }, 400);
+        } else {
+          setCurrentTurn(data.currentTurn);
+          setHands(data.hands);
+          setPassedInRound(data.passedInRound);
+          setTurnPhase('selecting');
+          setSelectedCardIndex(null);
+          setPassingCard(null);
+        }
         break;
 
       case 'quadmatch_round_complete':
+        console.log(`[${myPosition}] Round complete:`, data);
         setHands(data.hands);
         setCurrentRound(data.round);
         setPassedInRound({ south: false, west: false, north: false, east: false });
         setCurrentTurn('south');
         setTurnPhase('selecting');
+        setSelectedCardIndex(null);
+        setPassingCard(null);
         break;
 
       case 'quadmatch_game_over':
+        console.log(`[${myPosition}] Game over:`, data);
         setWinner(data.winner);
         setRankings(data.rankings);
         setHands(data.hands);
@@ -495,6 +520,7 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
         break;
 
       case 'quadmatch_play_again':
+        console.log(`[${myPosition}] Play again:`, data);
         setHands(data.hands);
         setCurrentRound(1);
         setSelectedCardIndex(null);

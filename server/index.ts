@@ -329,13 +329,36 @@ wss.on('connection', (socket) => {
 
           const senderPosition = room.playerPositions.get(playerId);
           
-          broadcastToRoom(room.id, {
-            type: 'game_action',
-            playerId,
-            senderPosition,
-            action: message.action,
-            data: message.data,
-          }, playerId);
+          const stateUpdateActions = [
+            'quadmatch_game_started',
+            'quadmatch_turn_change',
+            'quadmatch_round_complete',
+            'quadmatch_game_over',
+            'quadmatch_play_again',
+            'quadmatch_full_state_sync'
+          ];
+          
+          if (stateUpdateActions.includes(message.action)) {
+            room.players.forEach(player => {
+              if (player.socket.readyState === WebSocket.OPEN) {
+                player.socket.send(JSON.stringify({
+                  type: 'game_action',
+                  playerId,
+                  senderPosition,
+                  action: message.action,
+                  data: message.data,
+                }));
+              }
+            });
+          } else {
+            broadcastToRoom(room.id, {
+              type: 'game_action',
+              playerId,
+              senderPosition,
+              action: message.action,
+              data: message.data,
+            }, playerId);
+          }
           break;
         }
 

@@ -9,6 +9,13 @@ The application is a single-page application (SPA) with distinct game phases inc
 ## Recent Changes
 
 **December 9, 2025 (Latest):**
+- CRITICAL FIX: Fixed multiplayer state synchronization bug where only the host saw game state changes
+- Server now broadcasts state update actions (turn_change, round_complete, game_over, etc.) to ALL players including the sender
+- Non-host players now properly receive and apply state updates from the host's authoritative broadcasts
+- Added passing card animation data to broadcasts so all players can see card pass animations
+- Added comprehensive debug logging for multiplayer state synchronization
+
+**December 9, 2025 (Earlier):**
 - Fixed multiplayer view rotation: each player now sees themselves at the bottom (South display position) with opponents correctly positioned around the table
 - Fixed realtime synchronization: card passes and turn changes now properly sync to all players in multiplayer mode
 - Changed background music to use a local MP3 file (`attached_assets/background-music.mp3`)
