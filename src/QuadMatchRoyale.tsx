@@ -682,6 +682,21 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
     );
   };
 
+  const renderMiniCardBack = (index: number) => {
+    return (
+      <div key={`back-${index}`} className="aspect-[3/4] w-8 rounded bg-gradient-to-br from-[#2a3a5a] to-[#1a2535] border border-white/10 flex items-center justify-center">
+        <span className="text-white/30 text-[8px] font-bold">?</span>
+      </div>
+    );
+  };
+
+  const isMyPosition = (position: Position): boolean => {
+    if (gameMode === 'offline') {
+      return position === 'south';
+    }
+    return position === myPosition;
+  };
+
   const renderTurnIndicator = (position: Position) => {
     const isCurrentTurn = currentTurn === position;
     const hasPassed = passedInRound[position];
@@ -905,7 +920,7 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
             <div className="flex gap-1">
               {hands.north.map((card, idx) => (
                 <div key={`north-${idx}`} className="w-8">
-                  {renderMiniCard(card, idx)}
+                  {isMyPosition('north') ? renderMiniCard(card, idx) : renderMiniCardBack(idx)}
                 </div>
               ))}
             </div>
@@ -920,7 +935,7 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
               <div className="flex gap-1 mt-1">
                 {hands.west.map((card, idx) => (
                   <div key={`west-${idx}`} className="w-6 sm:w-8">
-                    {renderMiniCard(card, idx)}
+                    {isMyPosition('west') ? renderMiniCard(card, idx) : renderMiniCardBack(idx)}
                   </div>
                 ))}
               </div>
@@ -949,7 +964,7 @@ const QuadMatchRoyale: React.FC<QuadMatchRoyaleProps> = ({
               <div className="flex gap-1 mt-1">
                 {hands.east.map((card, idx) => (
                   <div key={`east-${idx}`} className="w-6 sm:w-8">
-                    {renderMiniCard(card, idx)}
+                    {isMyPosition('east') ? renderMiniCard(card, idx) : renderMiniCardBack(idx)}
                   </div>
                 ))}
               </div>
